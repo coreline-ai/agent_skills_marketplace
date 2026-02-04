@@ -198,8 +198,6 @@
 
 ## Phase 10: 프론트엔드 - 공통 (Web Common)
 
-## Phase 10: 프론트엔드 - 공통 (Web Common)
-
 ### 10.1 API 클라이언트
 - [x] `web/app/lib/api.ts` 작성 (getToken, setToken, clearToken, apiGet, apiPost, apiPatch)
 
