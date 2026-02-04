@@ -1,0 +1,75 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: skills_marketplace_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-skills_marketplace}
+    ports:
+      - "5433:5432"
+    volumes:
+      - skills_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: skills_marketplace_api
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-skills_marketplace}
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: skills_marketplace_worker
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      api:
+        condition: service_started
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-skills_marketplace}
+    command: [ "python", "-m", "app.workers.run_all" ]
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: skills_marketplace_web
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3001:3000"
+
+volumes:
+  skills_db_data:
+
+
+networks:
+  default:
+    name: agent_mesh
