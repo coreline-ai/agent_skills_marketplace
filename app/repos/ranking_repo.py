@@ -16,8 +16,10 @@ class RankingRepo:
         """Get global top 10 skills by popularity score."""
         stmt = (
             select(Skill)
-            .join(Skill.popularity)
-            .order_by(desc(SkillPopularity.score))
+            .outerjoin(Skill.popularity)
+            .where(Skill.is_official.is_(True))
+            .where(Skill.is_verified.is_(True))
+            .order_by(desc(SkillPopularity.score).nulls_last(), desc(Skill.created_at))
             .limit(10)
             .options(
                 selectinload(Skill.popularity),

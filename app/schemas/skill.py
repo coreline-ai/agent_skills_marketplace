@@ -21,6 +21,9 @@ class CategoryBase(BaseModel):
     description: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
+class CategoryWithCount(CategoryBase):
+    skill_count: int = 0
+
 
 class SkillSourceLinkBase(BaseModel):
     source_id: uuid.UUID

@@ -30,6 +30,8 @@ async def get_top10(
             score=s.popularity.score if s.popularity else 0.0,
             views=s.popularity.views if s.popularity else 0,
             stars=s.popularity.favorites if s.popularity else 0,
+            description=s.description,
+            category=s.category.name if s.category else None,
         )
         for i, s in enumerate(skills)
     ]

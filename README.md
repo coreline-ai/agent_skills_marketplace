@@ -98,7 +98,7 @@ docker compose up --build -d
 ### 3. 서비스 접속
 - **Web UI**: [http://localhost:3001](http://localhost:3001)
 - **API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **초기 계정**: `admin` / `admin` (또는 `.env` 설정값)
+- **관리자 계정**: `.env`의 `ADMIN_USERNAME` / `ADMIN_PASSWORD_HASH` 설정값 사용
 
 ---
 

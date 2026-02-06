@@ -14,10 +14,9 @@ async def list_repo_skills_candidates(repo_full_name: str) -> list[dict[str, Any
     Uses GitHub API Tree/Search.
     """
     client = await get_http_client()
-    headers = {
-        "Authorization": f"Bearer {settings.github_token}",
-        "Accept": "application/vnd.github.v3+json"
-    }
+    headers = {"Accept": "application/vnd.github.v3+json"}
+    if settings.github_token:
+        headers["Authorization"] = f"Bearer {settings.github_token}"
     
     # 1. Get default branch SHA
     repo_url = f"{settings.github_api_base}/repos/{repo_full_name}"

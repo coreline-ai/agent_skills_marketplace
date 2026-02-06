@@ -27,6 +27,7 @@ class AdminSkillCreate(BaseModel):
     triggers: Optional[list[str]] = None
     
     source_url: Optional[str] = None
+    source_link: Optional[dict] = None # {source_id: UUID, external_id: str}
     is_official: bool = False
     is_verified: bool = False
 

@@ -1,20 +1,54 @@
+// Force dynamic for detail page to ensure fresh data
+export const dynamic = 'force-dynamic';
+
 import { api } from "@/app/lib/api";
 import Link from "next/link";
-import { ArrowLeft, Star, Share2, Download, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
+import { SkillHeaderEngagement } from "@/components/SkillHeaderEngagement";
 
 interface SkillDetailProps {
-    params: { id: string };
+    params: Promise<{ id: string }>;
+}
+
+interface SkillTag {
+    slug: string;
+    name: string;
+}
+
+interface SkillSourceLink {
+    link_type: string;
+    url?: string | null;
+}
+
+interface SkillDetail {
+    id: string;
+    name: string;
+    description?: string | null;
+    summary?: string | null;
+    content?: string | null;
+    is_official: boolean;
+    category?: { name: string } | null;
+    stars: number;
+    views: number;
+    author?: string | null;
+    updated_at: string;
+    tags?: SkillTag[];
+    source_links?: SkillSourceLink[];
+    url?: string | null;
+    inputs?: Record<string, unknown> | null;
+    outputs?: Record<string, unknown> | null;
 }
 
 async function getSkill(id: string) {
     try {
-        return await api.get<any>(`/skills/${id}`);
-    } catch (e) {
+        return await api.get<SkillDetail>(`/skills/${id}`);
+    } catch {
         return null;
     }
 }
 
-export default async function SkillDetailPage({ params }: SkillDetailProps) {
+export default async function SkillDetailPage(props: SkillDetailProps) {
+    const params = await props.params;
     const skill = await getSkill(params.id);
 
     if (!skill) {
@@ -28,7 +62,11 @@ export default async function SkillDetailPage({ params }: SkillDetailProps) {
         );
     }
 
-    const skillInterface = skill.interface || {};
+    const installUrl = skill.url || null;
+    const skillInterface = {
+        inputs: skill.inputs,
+        outputs: skill.outputs,
+    };
 
     return (
         <div className="max-w-4xl mx-auto space-y-8">
@@ -53,34 +91,14 @@ export default async function SkillDetailPage({ params }: SkillDetailProps) {
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">{skill.name}</h1>
                         <p className="text-gray-600 text-lg">{skill.description}</p>
                     </div>
-                    <div className="flex gap-2">
-                        <button className="p-2 text-gray-400 hover:text-yellow-500 transition-colors border border-gray-200 rounded-lg hover:bg-gray-50">
-                            <Star className="w-5 h-5" />
-                        </button>
-                        <button className="p-2 text-gray-400 hover:text-blue-600 transition-colors border border-gray-200 rounded-lg hover:bg-gray-50">
-                            <Share2 className="w-5 h-5" />
-                        </button>
-                    </div>
                 </div>
-
-                <div className="mt-8 flex items-center gap-6 pt-6 border-t border-gray-100">
-                    <div className="flex items-center gap-2 text-gray-600">
-                        <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                        <span className="font-medium">{skill.stars}</span> stars
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                        <Download className="w-5 h-5" />
-                        <span className="font-medium">{skill.views}</span> views
-                    </div>
-                    <div className="ml-auto">
-                        <a
-                            href={`http://localhost:8000/api/skills/${skill.id}/download`} // Mock download link
-                            className="inline-flex items-center gap-2 bg-gray-900 text-white px-5 py-2.5 rounded-lg hover:bg-gray-800 transition-colors font-medium"
-                        >
-                            <Download className="w-4 h-4" /> Install Skill
-                        </a>
-                    </div>
-                </div>
+                <SkillHeaderEngagement
+                    skillId={skill.id}
+                    skillName={skill.name}
+                    initialStars={skill.stars}
+                    initialViews={skill.views}
+                    installUrl={installUrl}
+                />
             </div>
 
             {/* Content */}
@@ -91,7 +109,7 @@ export default async function SkillDetailPage({ params }: SkillDetailProps) {
                         <h2 className="text-xl font-bold text-gray-900 mb-4">Overview</h2>
                         <div className="prose prose-blue max-w-none text-gray-600">
                             {/* Render markdown content here implies using a markdown renderer */
-                                skill.content || skill.summary || "No detailed description available."}
+                                skill.content || skill.summary || skill.description || "No detailed description available."}
                         </div>
                     </section>
 
@@ -114,6 +132,30 @@ export default async function SkillDetailPage({ params }: SkillDetailProps) {
                             </div>
                         </section>
                     )}
+
+                    {/* Usage Guide */}
+                    <section className="bg-white border border-gray-200 rounded-xl p-6">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">How to Use</h2>
+                        <div className="prose prose-blue max-w-none text-gray-600">
+                            {installUrl ? (
+                                <div>
+                                    <p className="mb-4">
+                                        This skill is hosted externally. To use or install <strong>{skill.name}</strong>, please follow the instructions in the official repository.
+                                    </p>
+                                    <a
+                                        href={installUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center text-blue-600 hover:underline font-medium"
+                                    >
+                                        View Installation Guide <ExternalLink className="w-4 h-4 ml-1" />
+                                    </a>
+                                </div>
+                            ) : (
+                                <p>No usage instructions available for this skill.</p>
+                            )}
+                        </div>
+                    </section>
                 </div>
 
                 {/* Sidebar */}
@@ -146,7 +188,7 @@ export default async function SkillDetailPage({ params }: SkillDetailProps) {
                         <h2 className="font-bold text-gray-900 mb-4">Tags</h2>
                         <div className="flex flex-wrap gap-2">
                             {skill.tags && skill.tags.length > 0 ? (
-                                skill.tags.map((tag: any) => (
+                                skill.tags.map((tag) => (
                                     <span key={tag.slug} className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-md">
                                         {tag.name}
                                     </span>
@@ -159,10 +201,10 @@ export default async function SkillDetailPage({ params }: SkillDetailProps) {
 
                     <section className="bg-white border border-gray-200 rounded-xl p-6">
                         <h2 className="font-bold text-gray-900 mb-4">Source</h2>
-                        {skill.source_links && skill.source_links.map((link: any) => (
+                        {skill.source_links && skill.source_links.map((link) => (
                             <a
-                                key={link.url}
-                                href={link.url}
+                                key={`${link.link_type}-${link.url || "unknown"}`}
+                                href={link.url || "#"}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 text-sm text-blue-600 hover:underline mb-2"

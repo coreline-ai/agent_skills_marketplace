@@ -61,5 +61,20 @@ class Skill(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         "SkillSourceLink", back_populates="skill", cascade="all, delete-orphan"
     )
 
+    @property
+    def views(self) -> int:
+        """Expose views from popularity relation for API schemas."""
+        return self.popularity.views if self.popularity else 0
+
+    @property
+    def stars(self) -> int:
+        """Expose favorites as stars for API schemas."""
+        return self.popularity.favorites if self.popularity else 0
+
+    @property
+    def score(self) -> float:
+        """Expose computed score from popularity relation."""
+        return self.popularity.score if self.popularity else 0.0
+
     def __repr__(self) -> str:
         return f"<Skill {self.slug}>"

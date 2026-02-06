@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/app/lib/api";
+import { api, ApiError } from "@/app/lib/api";
+import { clearAdminSession, getAdminToken, setAdminToken } from "@/app/lib/admin-auth";
 
 export default function AdminLoginPage() {
     const router = useRouter();
@@ -11,43 +12,62 @@ export default function AdminLoginPage() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
+    useEffect(() => {
+        const token = getAdminToken();
+        if (!token) return;
+
+        api.get<{ username: string }>("/admin/me", token)
+            .then(() => {
+                router.replace("/admin/dashboard");
+            })
+            .catch((error) => {
+                if (error instanceof ApiError && error.status === 401) {
+                    clearAdminSession();
+                }
+            });
+    }, [router]);
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError("");
 
         try {
-            // Use URLSearchParams for form-urlencoded login
-            // Or if backend accepts JSON, use JSON. 
-            // OAuth2PasswordRequestForm expects form data usually.
-
-            // Let's assume JSON body for this custom endpoint or adapt
             const formData = new URLSearchParams();
             formData.append("username", username);
             formData.append("password", password);
+            formData.append("grant_type", "password"); // Required for OAuth2PasswordRequestForm
 
-            // We need a specific raw fetch or adapt api helper to support form-urlencoded
-            // Assume api.post supports generic body, but we need to set content-type manually if not JSON
-
-            const res = await fetch("http://localhost:8000/api/admin/login", {
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+            // Let fetch handle the Content-Type header for URLSearchParams (application/x-www-form-urlencoded)
+            const res = await fetch(`${baseUrl}/admin/login`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: formData.toString()
+                body: formData // URLSearchParams object
             });
 
-            if (!res.ok) throw new Error("Invalid credentials");
+            if (!res.ok) {
+                // Expected error (wrong password, etc) - Do not log to console as "Error"
+                if (res.status === 401) {
+                    setError("Incorrect username or password.");
+                    setLoading(false);
+                    return;
+                }
+                // Unexpected error - log it
+                const text = await res.text();
+                setError(`Login error (${res.status})`);
+                console.warn(`Login failed: ${res.status}`, text);
+                return;
+            }
 
             const data = await res.json();
 
-            // Build-your-own auth: Store token
-            localStorage.setItem("admin_token", data.access_token);
-            router.push("/admin/dashboard");
+            setAdminToken(data.access_token);
+            router.replace("/admin/dashboard");
 
         } catch (err) {
-            setError("Login failed. Please check your credentials.");
-            console.error(err);
+            // Network errors etc
+            setError("Connection failed. Please check network.");
+            console.error("Login Network Error:", err);
         } finally {
             setLoading(false);
         }
@@ -59,7 +79,7 @@ export default function AdminLoginPage() {
                 <div className="text-center">
                     <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Admin Login</h2>
                     <p className="mt-2 text-sm text-gray-600">
-                        Sign in to manage the marketplace
+                        Sign in to manage the marketplace (v1.2)
                     </p>
                 </div>
                 <form className="mt-8 space-y-6" onSubmit={handleLogin}>

@@ -11,13 +11,12 @@ interface RankingItem {
   score: number;
   views: number;
   stars: number;
-  description?: string; // API might not return this yet, check schema
-  // RankingItem schema in backend: rank, skill_id, slug, name, score, views, stars
-  // Missing: description, category. We need to fetch details or update backend schema.
-  // For MVP: Assuming backend returns category/description or we fetch list.
-  // Actually, let's update backend RankingItem schema later if needed.
-  // For now, will show mocked description/category if missing.
+  description?: string;
+  category?: string;
 }
+
+// Force dynamic to resolve API at runtime (Docker networking)
+export const dynamic = 'force-dynamic';
 
 async function getTopSkills() {
   try {
@@ -35,12 +34,11 @@ async function getTopSkills() {
 export default async function Home() {
   const topSkills = await getTopSkills();
 
-  // Mock data filling for missing fields in RankingItem for the UI demo
   const displaySkills = topSkills.map(s => ({
     ...s,
     id: s.skill_id,
-    description: "Powerful agent skill for automating tasks and enhancing workflow efficiency.",
-    category: "Productivity", // Placeholder
+    description: s.description || "No description provided.",
+    category: s.category || "Uncategorized",
   }));
 
   return (

@@ -1,6 +1,7 @@
 """Ranking schemas."""
 
 import uuid
+from typing import Optional
 from pydantic import BaseModel
 
 
@@ -13,3 +14,5 @@ class RankingItem(BaseModel):
     score: float
     views: int
     stars: int
+    description: Optional[str] = None
+    category: Optional[str] = None

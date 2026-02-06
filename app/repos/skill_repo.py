@@ -1,7 +1,7 @@
 """Skill Repository."""
 
 import uuid
-from typing import Sequence
+from typing import Sequence, Optional
 
 from sqlalchemy import select, update, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +19,7 @@ class SkillRepo:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_skill(self, skill_id: uuid.UUID) -> Skill | None:
+    async def get_skill(self, skill_id: uuid.UUID) -> Optional[Skill]:
         """Get skill by ID with relations."""
         stmt = (
             select(Skill)
@@ -34,7 +34,7 @@ class SkillRepo:
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
     
-    async def get_skill_by_slug(self, slug: str) -> Skill | None:
+    async def get_skill_by_slug(self, slug: str) -> Optional[Skill]:
         """Get skill by slug."""
         stmt = (
             select(Skill)
@@ -87,6 +87,7 @@ class SkillRepo:
             selectinload(Skill.category),
             selectinload(Skill.tag_associations).selectinload(SkillTag.tag),
             selectinload(Skill.popularity),
+            selectinload(Skill.source_links),
         )
 
         result = await self.db.execute(stmt)
