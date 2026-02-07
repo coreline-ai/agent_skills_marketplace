@@ -11,8 +11,8 @@
 AI Agent Skills Marketplace는 전 세계에 흩어진 AI 에이전트 스킬(**SKILL.md**)을 한곳에 모아 관리하는 플랫폼입니다. 자동 수집 파이프라인, 관리자 검토를 통한 핵심 품질 관리, 사용자 활동 기반의 실시간 랭킹 시스템을 제공합니다.
 
 <p float="left">
-  <img src="https://github.com/user-attachments/assets/e58b8804-0ee3-4f48-b1b0-baa8c2faf96c" width="35%" />
-  <img src="https://github.com/user-attachments/assets/63770bed-a62c-4f30-835f-9588c7fcc884" width="35%" />
+  <img src="https://github.com/user-attachments/assets/e58b8804-0ee3-4f48-b1b0-baa8c2faf96c" width="40%" />
+  <img src="https://github.com/user-attachments/assets/63770bed-a62c-4f30-835f-9588c7fcc884" width="40%" />
 </p>
 
 ---
