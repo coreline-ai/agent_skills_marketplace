@@ -14,14 +14,14 @@
 }
 
 .dark {
-  --background: #111827;
+  --background: #000000;
   --foreground: #f9fafb;
-  --sidebar: #1f2937;
-  --border: #374151;
-  --accent: #818cf8;
-  --accent-dark: #6366f1;
-  --text-muted: #9ca3af;
-  --card: #1f2937;
+  --sidebar: #09090b;
+  --border: #27272a;
+  --accent: #a855f7;
+  --accent-dark: #7e22ce;
+  --text-muted: #a1a1aa;
+  --card: #09090b;
 }
 
 @theme inline {
@@ -80,7 +80,8 @@
   }
 
   .dark .dot-pattern {
-    background-image: radial-gradient(#4b5563 1px, transparent 1px);
+    background-image: radial-gradient(#27272a 1px, transparent 1px);
+    opacity: 0.4;
   }
 
   .hero-border {

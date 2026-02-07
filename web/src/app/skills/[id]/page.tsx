@@ -57,10 +57,10 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
 
     if (!skill) {
         return (
-            <div className="text-center py-20 bg-gray-50 rounded-[24px] border border-gray-200">
-                <h1 className="text-2xl font-black text-gray-900 mb-2">Skill not found</h1>
-                <p className="text-gray-500 mb-6">The skill you are looking for does not exist or has been removed.</p>
-                <Link href="/skills" className="px-6 py-2 bg-black text-white rounded-full font-bold hover:bg-gray-800 transition-colors inline-block">
+            <div className="text-center py-20 bg-gray-50 dark:bg-zinc-900/40 rounded-[24px] border border-gray-200 dark:border-zinc-800">
+                <h1 className="text-2xl font-black text-gray-900 dark:text-white mb-2">Skill not found</h1>
+                <p className="text-gray-500 dark:text-zinc-500 mb-6">The skill you are looking for does not exist or has been removed.</p>
+                <Link href="/skills" className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-full font-bold hover:bg-gray-800 dark:hover:bg-zinc-200 transition-colors inline-block">
                     Back to Skills
                 </Link>
             </div>
@@ -75,36 +75,36 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
 
     return (
         <div className="max-w-5xl mx-auto space-y-8 pb-12">
-            <Link href="/skills" className="inline-flex items-center text-sm font-bold text-gray-500 hover:text-black transition-colors group">
+            <Link href="/skills" className="inline-flex items-center text-sm font-bold text-gray-500 dark:text-zinc-500 hover:text-black dark:hover:text-white transition-colors group">
                 <ArrowLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" /> Back to Skills
             </Link>
 
             {/* Header */}
-            <div className="bg-white border border-gray-100 rounded-2xl p-8 md:p-10 shadow-sm relative overflow-hidden">
+            <div className="bg-white dark:bg-card border border-gray-100 dark:border-white/10 rounded-2xl p-8 md:p-10 shadow-sm relative overflow-hidden">
                 <div className="relative z-10 flex flex-col md:flex-row items-start justify-between gap-6">
                     <div className="space-y-4 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                             {skill.category ? (
-                                <span className="px-3 py-1 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-full uppercase tracking-wide">
+                                <span className="px-3 py-1 text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-500/20 rounded-full uppercase tracking-wide">
                                     {skill.category.name}
                                 </span>
                             ) : (
-                                <span className="px-3 py-1 text-xs font-bold text-gray-500 bg-gray-100 border border-gray-200 rounded-full uppercase tracking-wide">
+                                <span className="px-3 py-1 text-xs font-bold text-gray-500 dark:text-zinc-500 bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-full uppercase tracking-wide">
                                     Uncategorized
                                 </span>
                             )}
                             {skill.is_official && (
-                                <span className="px-3 py-1 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-full uppercase tracking-wide flex items-center gap-1">
+                                <span className="px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-500/20 rounded-full uppercase tracking-wide flex items-center gap-1">
                                     <Shield className="w-3 h-3" /> Official
                                 </span>
                             )}
                         </div>
 
                         <div>
-                            <h1 className="text-xl font-bold text-gray-900 tracking-tight mb-2">
+                            <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">
                                 {skill.name}
                             </h1>
-                            <p className="text-sm text-gray-500 leading-relaxed max-w-2xl">
+                            <p className="text-sm text-gray-500 dark:text-zinc-400 leading-relaxed max-w-2xl">
                                 {skill.description || skill.summary}
                             </p>
                         </div>
@@ -127,12 +127,12 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
                 {/* Main Content Column */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Overview */}
-                    <section className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-                        <div className="flex items-center gap-2 mb-4 text-gray-900">
+                    <section className="bg-white dark:bg-card border border-gray-100 dark:border-white/10 rounded-2xl p-6 shadow-sm">
+                        <div className="flex items-center gap-2 mb-4 text-gray-900 dark:text-white">
                             <FileText className="w-4 h-4 opacity-70" />
                             <h2 className="text-base font-bold tracking-tight">Overview</h2>
                         </div>
-                        <div className="prose prose-sm prose-gray max-w-none text-gray-600 leading-relaxed prose-headings:font-bold prose-headings:text-gray-900 prose-a:text-blue-600 prose-a:font-bold hover:prose-a:text-blue-800 prose-code:text-pink-600 prose-code:bg-pink-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-pre:bg-gray-900 prose-pre:text-gray-50 prose-img:rounded-xl">
+                        <div className="prose prose-sm prose-gray dark:prose-invert max-w-none text-gray-600 dark:text-zinc-400 leading-relaxed prose-headings:font-bold prose-headings:text-gray-900 dark:prose-headings:text-white prose-a:text-blue-600 dark:prose-a:text-accent prose-a:font-bold hover:prose-a:text-blue-800 dark:hover:prose-a:text-accent/80 prose-code:text-pink-600 dark:prose-code:text-accent prose-code:bg-pink-50 dark:prose-code:bg-accent/10 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-pre:bg-gray-900 prose-pre:text-gray-50 dark:prose-pre:bg-black dark:prose-pre:border dark:prose-pre:border-white/10 prose-img:rounded-xl">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                 {skill.overview || skill.content || "No detailed overview available."}
                             </ReactMarkdown>
@@ -141,8 +141,8 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
 
                     {/* Interface */}
                     {(skillInterface.inputs || skillInterface.outputs) && (
-                        <section className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-                            <div className="flex items-center gap-2 mb-4 text-gray-900">
+                        <section className="bg-white dark:bg-card border border-gray-100 dark:border-white/10 rounded-2xl p-6 shadow-sm">
+                            <div className="flex items-center gap-2 mb-4 text-gray-900 dark:text-white">
                                 <Code className="w-4 h-4 opacity-70" />
                                 <h2 className="text-base font-bold tracking-tight">Interface</h2>
                             </div>
@@ -150,7 +150,7 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
                             <div className="grid gap-4">
                                 {skillInterface.inputs && (
                                     <div className="space-y-2">
-                                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Inputs</h3>
+                                        <h3 className="text-xs font-bold text-gray-500 dark:text-zinc-500 uppercase tracking-wider">Inputs</h3>
                                         <div className="bg-[#1e1e1e] p-4 rounded-xl shadow-inner border border-gray-800 overflow-hidden">
                                             <pre className="text-xs text-gray-300 overflow-x-auto font-mono custom-scrollbar">
                                                 {JSON.stringify(skillInterface.inputs, null, 2)}
@@ -161,7 +161,7 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
 
                                 {skillInterface.outputs && (
                                     <div className="space-y-2">
-                                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Outputs</h3>
+                                        <h3 className="text-xs font-bold text-gray-500 dark:text-zinc-500 uppercase tracking-wider">Outputs</h3>
                                         <div className="bg-[#1e1e1e] p-4 rounded-xl shadow-inner border border-gray-800 overflow-hidden">
                                             <pre className="text-xs text-gray-300 overflow-x-auto font-mono custom-scrollbar">
                                                 {JSON.stringify(skillInterface.outputs, null, 2)}
@@ -174,16 +174,16 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
                     )}
 
                     {/* Installation / Usage */}
-                    <section className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-                        <div className="flex items-center gap-2 mb-4 text-gray-900">
+                    <section className="bg-white dark:bg-card border border-gray-100 dark:border-white/10 rounded-2xl p-6 shadow-sm">
+                        <div className="flex items-center gap-2 mb-4 text-gray-900 dark:text-white">
                             <Layers className="w-4 h-4 opacity-70" />
                             <h2 className="text-base font-bold tracking-tight">Integration</h2>
                         </div>
 
-                        <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-6">
+                        <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-500/20 rounded-xl p-6">
                             {installUrl ? (
                                 <div className="space-y-4">
-                                    <p className="text-gray-700 font-medium">
+                                    <p className="text-gray-700 dark:text-zinc-300 font-medium">
                                         To integrate this skill into your agent, refer to the official documentation or source repository.
                                     </p>
                                     <a
@@ -197,7 +197,7 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
                                     </a>
                                 </div>
                             ) : (
-                                <p className="text-gray-500 italic">No direct integration link provided.</p>
+                                <p className="text-gray-500 dark:text-zinc-500 italic">No direct integration link provided.</p>
                             )}
                         </div>
                     </section>
@@ -206,38 +206,38 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
                 {/* Sidebar Column */}
                 <div className="space-y-6">
                     {/* Metadata Card */}
-                    <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-                        <div className="flex items-center gap-2 mb-6 text-gray-900 border-b border-gray-100 pb-4">
+                    <div className="bg-white dark:bg-card border border-gray-100 dark:border-white/10 rounded-2xl p-6 shadow-sm">
+                        <div className="flex items-center gap-2 mb-6 text-gray-900 dark:text-white border-b border-gray-100 dark:border-white/5 pb-4">
                             <Box className="w-5 h-5 opacity-70" />
                             <h3 className="font-bold text-lg">Details</h3>
                         </div>
 
                         <div className="space-y-5">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                                <span className="text-sm font-medium text-gray-500 dark:text-zinc-500 flex items-center gap-2">
                                     <User className="w-4 h-4" /> Author
                                 </span>
-                                <span className="text-sm font-bold text-gray-900 text-right truncate max-w-[120px]">
+                                <span className="text-sm font-bold text-gray-900 dark:text-white text-right truncate max-w-[120px]">
                                     {skill.author || "Community"}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                                <span className="text-sm font-medium text-gray-500 dark:text-zinc-500 flex items-center gap-2">
                                     <Shield className="w-4 h-4" /> License
                                 </span>
-                                <span className="text-sm font-bold text-gray-900">MIT</span>
+                                <span className="text-sm font-bold text-gray-900 dark:text-white">MIT</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                                <span className="text-sm font-medium text-gray-500 dark:text-zinc-500 flex items-center gap-2">
                                     <Calendar className="w-4 h-4" /> Updated
                                 </span>
-                                <span className="text-sm font-bold text-gray-900">
+                                <span className="text-sm font-bold text-gray-900 dark:text-white">
                                     {new Date(skill.updated_at).toLocaleDateString()}
                                 </span>
                             </div>
-                            <div className="pt-4 mt-2 border-t border-gray-100">
+                            <div className="pt-4 mt-2 border-t border-gray-100 dark:border-white/5">
                                 <div className="flex flex-col gap-3">
-                                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Source Links</h4>
+                                    <h4 className="text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider mb-1">Source Links</h4>
                                     {(() => {
                                         const links = skill.source_links?.map(l => ({ type: l.link_type, url: l.url || l.external_id }))
                                             .filter(l => l.url) || [];
@@ -254,7 +254,7 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
                                                 href={link.url!}
                                                 target="_blank"
                                                 rel="noopener"
-                                                className="flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-blue-600 transition-colors"
+                                                className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-accent transition-colors"
                                             >
                                                 <Globe className="w-3.5 h-3.5" />
                                                 {link.type}
@@ -267,8 +267,8 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
                     </div>
 
                     {/* Tags Card */}
-                    <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-                        <div className="flex items-center gap-2 mb-4 text-gray-900">
+                    <div className="bg-white dark:bg-card border border-gray-100 dark:border-white/10 rounded-2xl p-6 shadow-sm">
+                        <div className="flex items-center gap-2 mb-4 text-gray-900 dark:text-white">
                             <Tag className="w-5 h-5 opacity-70" />
                             <h3 className="font-bold text-lg">Tags</h3>
                         </div>
@@ -276,7 +276,7 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
                             {skill.category && (
                                 <Link
                                     href={`/skills?category=${skill.category.slug}`}
-                                    className="px-3 py-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-black rounded-lg text-xs font-bold transition-all"
+                                    className="px-3 py-1.5 bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 hover:bg-gray-200 dark:hover:bg-zinc-700 hover:text-black dark:hover:text-white rounded-lg text-xs font-bold transition-all"
                                 >
                                     #{skill.category.name}
                                 </Link>
@@ -285,7 +285,7 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
                                 <Link
                                     key={tag.slug}
                                     href={`/skills?q=${tag.name}`}
-                                    className="px-3 py-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-black rounded-lg text-xs font-bold transition-all"
+                                    className="px-3 py-1.5 bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 hover:bg-gray-200 dark:hover:bg-zinc-700 hover:text-black dark:hover:text-white rounded-lg text-xs font-bold transition-all"
                                 >
                                     #{tag.name}
                                 </Link>

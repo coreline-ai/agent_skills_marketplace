@@ -53,6 +53,7 @@ export default function AdminLayout({
         };
     }, [isLoginPage, router]);
 
+    // Login page uses the main layout (with sidebar) - pass through completely
     if (isLoginPage) {
         return <>{children}</>;
     }

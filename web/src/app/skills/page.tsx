@@ -83,20 +83,20 @@ export default async function SkillsPage(props: {
         <div className="space-y-10">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">Skills</h1>
-                    <div className="text-sm font-bold text-gray-500">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">Skills</h1>
+                    <div className="text-sm font-bold text-gray-500 dark:text-zinc-500">
                         Showing {data.items.length} of {data.total} skills
                     </div>
                 </div>
 
                 <form className="relative w-full md:w-80">
                     <div className="relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-zinc-500" />
                         <input
                             type="text"
                             name="q"
                             placeholder="Search by keywords..."
-                            className="w-full bg-[#F3F4F6] text-sm text-gray-900 placeholder-gray-400 border border-transparent focus:bg-white focus:border-accent focus:ring-0 rounded-full pl-11 pr-4 py-2.5 transition-all shadow-sm"
+                            className="w-full bg-[#F3F4F6] dark:bg-zinc-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 border border-transparent dark:border-white/10 focus:bg-white dark:focus:bg-black focus:border-accent dark:focus:border-accent focus:ring-0 rounded-full pl-11 pr-4 py-2.5 transition-all shadow-sm"
                             defaultValue={q}
                         />
                     </div>
@@ -105,13 +105,13 @@ export default async function SkillsPage(props: {
             </div>
 
             <div className="space-y-4">
-                <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Categories</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Categories</p>
                 <div className="flex flex-wrap gap-2">
                     <Link
                         href={buildSkillsHref({ q })}
                         className={`px-4 py-1.5 rounded-full border text-xs font-bold transition-all ${!category
-                            ? 'bg-gray-900 text-white border-gray-900 shadow-md'
-                            : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-200'}`}
+                            ? 'bg-gray-900 dark:bg-white text-white dark:text-black border-gray-900 dark:border-white shadow-md'
+                            : 'bg-white dark:bg-zinc-900/40 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 hover:bg-gray-200 dark:hover:bg-zinc-800'}`}
                     >
                         All ({totalCategoryCount})
                     </Link>
@@ -120,12 +120,12 @@ export default async function SkillsPage(props: {
                             key={item.id}
                             href={buildSkillsHref({ q, category: item.slug })}
                             className={`px-4 py-1.5 rounded-full border text-xs font-bold transition-all ${category === item.slug
-                                ? 'bg-gray-900 text-white border-gray-900 shadow-md'
-                                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-200'}`}
+                                ? 'bg-gray-900 dark:bg-white text-white dark:text-black border-gray-900 dark:border-white shadow-md'
+                                : 'bg-white dark:bg-zinc-900/40 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 hover:bg-gray-200 dark:hover:bg-zinc-800'}`}
                         >
                             <span className="inline-flex items-center gap-2">
                                 <span>{item.name}</span>
-                                <span className={`text-[10px] ${category === item.slug ? 'text-gray-300' : 'text-gray-400'}`}>{item.skill_count || 0}</span>
+                                <span className={`text-[10px] ${category === item.slug ? 'text-gray-300 dark:text-zinc-500' : 'text-gray-400 dark:text-zinc-600'}`}>{item.skill_count || 0}</span>
                             </span>
                         </Link>
                     ))}
@@ -149,38 +149,38 @@ export default async function SkillsPage(props: {
                         />
                     ))
                 ) : (
-                    <div className="col-span-full text-center py-20 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
-                        <p className="text-lg font-medium text-gray-500">No skills found matching your criteria.</p>
+                    <div className="col-span-full text-center py-20 border-2 border-dashed border-gray-200 dark:border-zinc-800 rounded-xl bg-gray-50 dark:bg-zinc-900/40">
+                        <p className="text-lg font-medium text-gray-500 dark:text-zinc-500">No skills found matching your criteria.</p>
                     </div>
                 )}
             </div>
 
-            <div className="flex justify-center items-center gap-4 pt-8 border-t border-gray-100">
+            <div className="flex justify-center items-center gap-4 pt-8 border-t border-gray-100 dark:border-white/5">
                 {safePage <= 1 ? (
-                    <span className="flex items-center gap-1 px-5 py-2 border border-gray-100 rounded-full text-xs font-bold text-gray-300 cursor-not-allowed bg-gray-50">
+                    <span className="flex items-center gap-1 px-5 py-2 border border-gray-100 dark:border-white/5 rounded-full text-xs font-bold text-gray-300 dark:text-zinc-700 cursor-not-allowed bg-gray-50 dark:bg-zinc-900/40">
                         <ChevronLeft className="w-3 h-3" /> Previous
                     </span>
                 ) : (
                     <Link
                         href={buildSkillsHref({ q, category, page: safePage - 1 })}
-                        className="flex items-center gap-1 px-5 py-2 border border-gray-200 rounded-full text-xs font-bold text-gray-600 hover:bg-white hover:text-gray-900 hover:shadow-sm transition-all bg-white"
+                        className="flex items-center gap-1 px-5 py-2 border border-gray-200 dark:border-zinc-800 rounded-full text-xs font-bold text-gray-600 dark:text-zinc-400 hover:bg-white dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white hover:shadow-sm transition-all bg-white dark:bg-zinc-900"
                     >
                         <ChevronLeft className="w-3 h-3" /> Previous
                     </Link>
                 )}
 
-                <span className="text-xs font-bold text-gray-500">
-                    Page <span className="text-gray-900">{data.page}</span> of {data.pages}
+                <span className="text-xs font-bold text-gray-500 dark:text-zinc-500">
+                    Page <span className="text-gray-900 dark:text-white">{data.page}</span> of {data.pages}
                 </span>
 
                 {safePage >= data.pages ? (
-                    <span className="flex items-center gap-1 px-5 py-2 border border-gray-100 rounded-full text-xs font-bold text-gray-300 cursor-not-allowed bg-gray-50">
+                    <span className="flex items-center gap-1 px-5 py-2 border border-gray-100 dark:border-white/5 rounded-full text-xs font-bold text-gray-300 dark:text-zinc-700 cursor-not-allowed bg-gray-50 dark:bg-zinc-900/40">
                         Next <ChevronRight className="w-3 h-3" />
                     </span>
                 ) : (
                     <Link
                         href={buildSkillsHref({ q, category, page: safePage + 1 })}
-                        className="flex items-center gap-1 px-5 py-2 border border-gray-200 rounded-full text-xs font-bold text-gray-600 hover:bg-white hover:text-gray-900 hover:shadow-sm transition-all bg-white"
+                        className="flex items-center gap-1 px-5 py-2 border border-gray-200 dark:border-zinc-800 rounded-full text-xs font-bold text-gray-600 dark:text-zinc-400 hover:bg-white dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white hover:shadow-sm transition-all bg-white dark:bg-zinc-900"
                     >
                         Next <ChevronRight className="w-3 h-3" />
                     </Link>

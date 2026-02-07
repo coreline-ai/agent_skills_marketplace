@@ -12,6 +12,7 @@ from app.models.skill_event import SkillEvent
 from app.models.skill_popularity import SkillPopularity
 from app.models.skill_rank_snapshot import SkillRankSnapshot
 from app.models.github_repo_cache import GithubRepoCache
+from app.models.system_setting import SystemSetting
 
 __all__ = [
     "SkillSource",
@@ -26,4 +27,5 @@ __all__ = [
     "SkillPopularity",
     "SkillRankSnapshot",
     "GithubRepoCache",
+    "SystemSetting",
 ]

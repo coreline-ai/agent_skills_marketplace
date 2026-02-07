@@ -75,17 +75,17 @@ export default function AdminLoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-[32px] shadow-2xl border border-gray-100/50 relative overflow-hidden">
+        <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-md w-full space-y-8 bg-white dark:bg-card p-10 rounded-[32px] shadow-2xl border border-gray-100/50 dark:border-white/10 relative overflow-hidden">
                 {/* Decoration */}
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-gray-900 to-gray-600"></div>
 
                 <div className="text-center space-y-2">
-                    <div className="mx-auto h-12 w-12 bg-gray-900 rounded-xl flex items-center justify-center text-white shadow-lg mb-6 transform rotate-3 hover:rotate-6 transition-transform">
+                    <div className="mx-auto h-12 w-12 bg-gray-900 dark:bg-white rounded-xl flex items-center justify-center text-white dark:text-black shadow-lg mb-6 transform rotate-3 hover:rotate-6 transition-transform">
                         <Lock className="h-6 w-6" />
                     </div>
-                    <h2 className="text-3xl font-bold text-gray-900 tracking-tight">관리자 로그인</h2>
-                    <p className="text-sm text-gray-500 font-medium">
+                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">관리자 로그인</h2>
+                    <p className="text-sm text-gray-500 dark:text-zinc-400 font-medium">
                         마켓플레이스 관리를 위해 로그인하세요 (v1.2)
                     </p>
                 </div>
@@ -99,7 +99,7 @@ export default function AdminLoginPage() {
                     )}
                     <div className="space-y-5">
                         <div className="relative group">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-gray-900 transition-colors">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 dark:text-zinc-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors">
                                 <User className="h-5 w-5" />
                             </div>
                             <input
@@ -107,14 +107,14 @@ export default function AdminLoginPage() {
                                 name="username"
                                 type="text"
                                 required
-                                className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all bg-gray-50 focus:bg-white font-medium sm:text-sm"
+                                className="block w-full pl-10 pr-3 py-3 border border-gray-200 dark:border-zinc-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-gray-900/10 dark:focus:ring-white/10 focus:border-gray-900 dark:focus:border-white transition-all bg-gray-50 dark:bg-zinc-900 focus:bg-white dark:focus:bg-black font-medium sm:text-sm"
                                 placeholder="사용자 이름"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                             />
                         </div>
                         <div className="relative group">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-gray-900 transition-colors">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 dark:text-zinc-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors">
                                 <Lock className="h-5 w-5" />
                             </div>
                             <input
@@ -122,7 +122,7 @@ export default function AdminLoginPage() {
                                 name="password"
                                 type="password"
                                 required
-                                className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all bg-gray-50 focus:bg-white font-medium sm:text-sm"
+                                className="block w-full pl-10 pr-3 py-3 border border-gray-200 dark:border-zinc-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-gray-900/10 dark:focus:ring-white/10 focus:border-gray-900 dark:focus:border-white transition-all bg-gray-50 dark:bg-zinc-900 focus:bg-white dark:focus:bg-black font-medium sm:text-sm"
                                 placeholder="비밀번호"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -134,7 +134,7 @@ export default function AdminLoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 disabled:opacity-70 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+                            className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white dark:text-black bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 dark:focus:ring-white disabled:opacity-70 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
                         >
                             {loading ? (
                                 <span className="flex items-center gap-2">

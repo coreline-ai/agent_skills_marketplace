@@ -40,31 +40,31 @@ export default async function Home() {
 
   return (
     <div className="space-y-12">
-      <section className="relative rounded-[20px] hero-border overflow-hidden mb-12 bg-gray-50/50" data-purpose="hero-banner">
+      <section className="relative rounded-[20px] hero-border overflow-hidden mb-12 bg-gray-50/50 dark:bg-black" data-purpose="hero-banner">
         <div className="absolute inset-0 dot-pattern pointer-events-none"></div>
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between p-8 md:p-12 gap-8">
           <div className="flex-1 space-y-6 max-w-2xl">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] bg-white text-gray-700 text-[10px] font-bold tracking-[1px] uppercase border border-gray-200 shadow-sm">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] bg-white dark:bg-white/10 text-gray-700 dark:text-gray-300 text-[10px] font-bold tracking-[1px] uppercase border border-gray-200 dark:border-white/10 shadow-sm">
               <Sparkles className="w-3 h-3 text-accent" />
               THE MARKETPLACE FOR AI MINDS
             </span>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-              Unlock Your AI's <br /> Agent <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-500">Skills</span>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white leading-tight">
+              Unlock Your AI's <br /> Agent <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-500 dark:from-white dark:to-zinc-500">Skills</span>
             </h1>
-            <p className="text-gray-600 text-lg leading-relaxed max-w-lg">
+            <p className="text-gray-600 dark:text-zinc-400 text-lg leading-relaxed max-w-lg">
               Discover, integrate, and deploy high-quality skills. Community-driven, verified, and ready to run.
             </p>
             <div className="flex flex-wrap gap-4 pt-2">
-              <Link href="/skills" className="px-6 py-3 bg-gray-900 text-white border border-gray-900 font-medium rounded-full hover:bg-gray-800 hover:shadow-lg transition-all text-sm mr-2">
+              <Link href="/skills" className="px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-black border border-gray-900 dark:border-white font-medium rounded-full hover:bg-gray-800 dark:hover:bg-zinc-200 hover:shadow-lg transition-all text-sm mr-2">
                 Browse Skills Library
               </Link>
-              <Link href="/rankings" className="px-6 py-3 border border-gray-300 bg-white text-gray-700 font-medium rounded-full hover:border-gray-400 hover:bg-gray-50 transition-colors text-sm">
+              <Link href="/rankings" className="px-6 py-3 border border-gray-300 dark:border-zinc-800 bg-white dark:bg-transparent text-gray-700 dark:text-white font-medium rounded-full hover:border-gray-400 dark:hover:border-zinc-700 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-sm">
                 View Leaderboard
               </Link>
             </div>
           </div>
           <div className="w-full max-w-[320px] md:max-w-[400px] flex-shrink-0 relative">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-blue-100/60 blur-[60px] rounded-full pointer-events-none"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-blue-100/60 dark:bg-accent/20 blur-[60px] dark:blur-[100px] rounded-full pointer-events-none"></div>
             <img
               alt="AI Robot Illustration"
               className="w-full h-auto object-contain relative z-10 drop-shadow-xl filter saturate-[0.8]"
@@ -76,16 +76,16 @@ export default async function Home() {
 
       <section data-purpose="trending-skills">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">Trending Skills</h2>
-          <Link href="/skills" className="text-[0.9rem] text-gray-500 hover:text-accent transition-colors flex items-center gap-1 group">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Trending Skills</h2>
+          <Link href="/skills" className="text-[0.9rem] text-gray-500 dark:text-zinc-500 hover:text-accent transition-colors flex items-center gap-1 group">
             See All
             <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
 
         {displaySkills.length === 0 ? (
-          <div className="text-center py-20 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl">
-            <p className="text-lg font-medium text-gray-500">No rankings available yet.</p>
+          <div className="text-center py-20 bg-gray-50 dark:bg-zinc-900/40 border-2 border-dashed border-gray-200 dark:border-zinc-800 rounded-xl">
+            <p className="text-lg font-medium text-gray-500 dark:text-zinc-500">No rankings available yet.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

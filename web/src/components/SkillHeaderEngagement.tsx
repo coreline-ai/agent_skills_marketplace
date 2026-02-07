@@ -119,7 +119,7 @@ export function SkillHeaderEngagement({
                         type="button"
                         onClick={onFavorite}
                         title={favorited ? "Favorited" : "Add favorite"}
-                        className={`p-3 border border-border rounded-xl transition-all shadow-soft overflow-hidden hover:shadow-hover ${favorited ? "bg-black text-white" : "bg-background text-foreground hover:bg-sidebar"
+                        className={`p-3 border border-border dark:border-white/10 rounded-xl transition-all shadow-soft overflow-hidden hover:shadow-hover ${favorited ? "bg-black text-white dark:bg-white dark:text-black" : "bg-background text-foreground dark:text-white hover:bg-sidebar dark:hover:bg-white/5"
                             }`}
                     >
                         <Star className={`w-5 h-5 ${favorited ? "fill-current" : ""}`} />
@@ -128,7 +128,7 @@ export function SkillHeaderEngagement({
                         type="button"
                         onClick={onShare}
                         title={shared ? "Copied" : "Share"}
-                        className={`p-3 border border-border rounded-xl transition-all shadow-soft overflow-hidden hover:shadow-hover ${shared ? "bg-green-500 text-white" : "bg-background text-foreground hover:bg-sidebar"
+                        className={`p-3 border border-border dark:border-white/10 rounded-xl transition-all shadow-soft overflow-hidden hover:shadow-hover ${shared ? "bg-green-500 text-white" : "bg-background text-foreground dark:text-white hover:bg-sidebar dark:hover:bg-white/5"
                             }`}
                     >
                         <Share2 className="w-5 h-5" />
@@ -136,14 +136,14 @@ export function SkillHeaderEngagement({
                 </div>
             </div>
 
-            <div className="mt-8 flex flex-wrap items-center gap-6 pt-6 border-t border-border">
+            <div className="mt-8 flex flex-wrap items-center gap-6 pt-6 border-t border-border dark:border-white/10">
                 <div className="flex items-center gap-2 font-medium text-text-muted">
                     <Star className="w-5 h-5" />
-                    <span className="text-xl font-bold text-foreground">{stars}</span> stars
+                    <span className="text-xl font-bold text-foreground dark:text-white">{stars}</span> stars
                 </div>
                 <div className="flex items-center gap-2 font-medium text-text-muted">
                     <Eye className="w-5 h-5" />
-                    <span className="text-xl font-bold text-foreground">{views}</span> views
+                    <span className="text-xl font-bold text-foreground dark:text-white">{views}</span> views
                 </div>
                 <div className="ml-auto">
                     {installUrl ? (
@@ -151,7 +151,7 @@ export function SkillHeaderEngagement({
                             href={installUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 bg-foreground text-background px-8 py-3 rounded-full font-bold text-lg shadow-soft hover:shadow-hover hover:-translate-y-0.5 transition-all"
+                            className="inline-flex items-center gap-2 bg-foreground dark:bg-white text-background dark:text-black px-8 py-3 rounded-full font-bold text-lg shadow-soft hover:shadow-hover hover:-translate-y-0.5 transition-all"
                         >
                             <Download className="w-5 h-5" /> Open Source
                         </a>
@@ -159,7 +159,7 @@ export function SkillHeaderEngagement({
                         <button
                             type="button"
                             disabled
-                            className="inline-flex items-center gap-2 bg-sidebar text-text-muted border border-dashed border-border px-8 py-3 rounded-full font-bold text-lg cursor-not-allowed"
+                            className="inline-flex items-center gap-2 bg-sidebar dark:bg-zinc-900 text-text-muted border border-dashed border-border dark:border-white/5 px-8 py-3 rounded-full font-bold text-lg cursor-not-allowed"
                         >
                             <Download className="w-5 h-5" /> No Source URL
                         </button>
