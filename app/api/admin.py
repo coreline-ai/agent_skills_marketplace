@@ -14,6 +14,8 @@ from app.security.auth import verify_password, create_access_token
 from app.models.raw_skill import RawSkill
 from app.schemas.common import Page
 from app.ingest.sources import SOURCES
+from app.schemas.worker_settings import WorkerSettings, WorkerSettingsPatch
+from app.repos.system_setting_repo import get_worker_settings, patch_worker_settings
 
 settings = get_settings()
 router = APIRouter()
@@ -194,3 +196,28 @@ async def list_crawl_sources(
 
     items.sort(key=_sort_key)
     return items
+
+
+@router.get("/worker-settings", response_model=WorkerSettings)
+async def read_worker_settings(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[dict, Depends(require_admin)],
+):
+    """Read runtime settings used by the worker loop."""
+    return await get_worker_settings(db)
+
+
+@router.patch("/worker-settings", response_model=WorkerSettings)
+async def update_worker_settings(
+    payload: WorkerSettingsPatch,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[dict, Depends(require_admin)],
+):
+    """Update runtime settings used by the worker loop."""
+    try:
+        updated = await patch_worker_settings(db, payload)
+        await db.commit()
+        return updated
+    except ValueError as exc:
+        await db.rollback()
+        raise HTTPException(status_code=409, detail=str(exc)) from exc

@@ -36,7 +36,7 @@ export function Sidebar() {
     return (
         <aside className="bg-sidebar border-r border-border min-h-full flex flex-col flex-shrink-0 w-[280px] hidden md:flex transition-all duration-300" data-purpose="sidebar">
             <div className="h-20 flex items-center px-6 border-b border-sidebar">
-                <Link href="/" className="flex items-center gap-3">
+                <a href="https://coreline-project.vercel.app/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3">
                     <img
                         src="/coreline_logo.png"
                         alt="Coreline AI Logo"
@@ -45,7 +45,7 @@ export function Sidebar() {
                     <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
                         CORELINE <span className="text-accent">AI</span>
                     </span>
-                </Link>
+                </a>
             </div>
 
             <nav className="flex-1 px-4 py-6 overflow-y-auto space-y-8">

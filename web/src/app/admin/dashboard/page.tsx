@@ -38,15 +38,23 @@ interface CrawlSourceItem {
     };
 }
 
+interface WorkerSettings {
+    auto_ingest_enabled: boolean;
+    auto_ingest_interval_seconds: number;
+}
+
 export default function AdminDashboardPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [isSyncing, setIsSyncing] = useState(false);
+    const [isSavingWorkerSettings, setIsSavingWorkerSettings] = useState(false);
     const [recentActivity, setRecentActivity] = useState<RawSkillListItem[]>([]);
     const [totalSkills, setTotalSkills] = useState(0);
     const [pendingCount, setPendingCount] = useState(0);
     const [flaggedCount, setFlaggedCount] = useState(0);
     const [crawlSources, setCrawlSources] = useState<CrawlSourceItem[]>([]);
+    const [workerSettings, setWorkerSettings] = useState<WorkerSettings | null>(null);
+    const [intervalDraft, setIntervalDraft] = useState("");
     const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
 
     const fetchDashboardData = useCallback(async (showInitialLoading: boolean = false) => {
@@ -60,11 +68,12 @@ export default function AdminDashboardPage() {
                 router.replace("/admin/login");
                 return;
             }
-            const [skillsRes, pendingRes, errorRes, sourceRes] = await Promise.all([
+            const [skillsRes, pendingRes, errorRes, sourceRes, workerRes] = await Promise.all([
                 api.get<{ total: number }>("/skills?page=1&size=1"),
                 api.get<RawSkillListResponse>("/admin/raw-skills?status=pending&page=1&size=5", token),
                 api.get<RawSkillListResponse>("/admin/raw-skills?status=error&page=1&size=1", token),
                 api.get<CrawlSourceItem[]>("/admin/crawl-sources", token),
+                api.get<WorkerSettings>("/admin/worker-settings", token),
             ]);
 
             setTotalSkills(skillsRes.total ?? 0);
@@ -72,6 +81,10 @@ export default function AdminDashboardPage() {
             setPendingCount(pendingRes.total ?? 0);
             setFlaggedCount(errorRes.total ?? 0);
             setCrawlSources(sourceRes || []);
+            setWorkerSettings(workerRes || null);
+            if (showInitialLoading && workerRes) {
+                setIntervalDraft(String(workerRes.auto_ingest_interval_seconds ?? 60));
+            }
             setLastUpdatedAt(new Date());
         } catch (error) {
             console.error("Failed to fetch dashboard data", error);
@@ -86,6 +99,7 @@ export default function AdminDashboardPage() {
                 setPendingCount(0);
                 setFlaggedCount(0);
                 setCrawlSources([]);
+                setWorkerSettings(null);
             }
         } finally {
             if (showInitialLoading) {
@@ -113,6 +127,33 @@ export default function AdminDashboardPage() {
             document.removeEventListener("visibilitychange", onVisibilityChange);
         };
     }, [fetchDashboardData]);
+
+    const patchWorkerSettings = async (patch: Partial<WorkerSettings>) => {
+        setIsSavingWorkerSettings(true);
+        try {
+            const token = getAdminToken() || undefined;
+            if (!token) {
+                clearAdminSession();
+                router.replace("/admin/login");
+                return;
+            }
+            const updated = await api.patch<WorkerSettings>("/admin/worker-settings", patch, token);
+            setWorkerSettings(updated);
+            if (typeof updated.auto_ingest_interval_seconds === "number") {
+                setIntervalDraft(String(updated.auto_ingest_interval_seconds));
+            }
+        } catch (error) {
+            console.error("Failed to update worker settings", error);
+            if (error instanceof ApiError && error.status === 401) {
+                clearAdminSession();
+                router.replace("/admin/login");
+                return;
+            }
+            alert("Failed to update worker settings. (If this is a fresh DB, run alembic migrations.)");
+        } finally {
+            setIsSavingWorkerSettings(false);
+        }
+    };
 
     const handleSync = async () => {
         setIsSyncing(true);
@@ -208,6 +249,72 @@ export default function AdminDashboardPage() {
                         <Link href="/admin/quality" className="block w-full text-center px-4 py-2 bg-gray-50 text-gray-900 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium">
                             문제 검토
                         </Link>
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm md:col-span-3">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div>
+                            <h3 className="text-gray-900 font-bold">워커 자동 크롤링</h3>
+                            <p className="text-sm text-gray-500 mt-1">
+                                워커 컨테이너는 계속 실행되지만, 여기서 수집(ingest)을 끌 수 있습니다. 변경은 다음 루프부터 반영됩니다.
+                            </p>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm text-gray-500">
+                                상태:{" "}
+                                <span
+                                    className={`font-bold ${workerSettings?.auto_ingest_enabled ? "text-emerald-600" : "text-gray-700"}`}
+                                >
+                                    {workerSettings?.auto_ingest_enabled ? "ON" : "OFF"}
+                                </span>
+                            </span>
+                            <button
+                                onClick={() =>
+                                    patchWorkerSettings({
+                                        auto_ingest_enabled: !(workerSettings?.auto_ingest_enabled ?? true),
+                                    })
+                                }
+                                disabled={isSavingWorkerSettings}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 ${
+                                    workerSettings?.auto_ingest_enabled
+                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                                        : "bg-gray-50 text-gray-800 border-gray-200 hover:bg-gray-100"
+                                }`}
+                            >
+                                {isSavingWorkerSettings ? "저장 중..." : workerSettings?.auto_ingest_enabled ? "끄기" : "켜기"}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="mt-5 flex flex-col md:flex-row md:items-center gap-3">
+                        <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                            루프 간격 (초)
+                        </label>
+                        <input
+                            type="number"
+                            min={10}
+                            max={86400}
+                            value={intervalDraft}
+                            onChange={(e) => setIntervalDraft(e.target.value)}
+                            className="w-full md:w-48 px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                            placeholder="60"
+                        />
+                        <button
+                            onClick={() => {
+                                const parsed = Number.parseInt(intervalDraft, 10);
+                                if (!Number.isFinite(parsed) || parsed < 10 || parsed > 86400) {
+                                    alert("Interval must be between 10 and 86400 seconds.");
+                                    return;
+                                }
+                                patchWorkerSettings({ auto_ingest_interval_seconds: parsed });
+                            }}
+                            disabled={isSavingWorkerSettings}
+                            className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors text-sm font-medium"
+                        >
+                            간격 저장
+                        </button>
                     </div>
                 </div>
             </div>
