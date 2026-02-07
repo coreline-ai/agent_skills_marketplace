@@ -41,8 +41,11 @@ export default function AdminLayout({
             .catch((error) => {
                 if (error instanceof ApiError && error.status === 401) {
                     clearAdminSession();
+                    router.replace("/admin/login");
+                    return;
                 }
-                router.replace("/admin/login");
+                // Keep session on transient errors (network/server). Avoid forced relogin loops.
+                if (mounted) setAuthReady(true);
             });
 
         return () => {

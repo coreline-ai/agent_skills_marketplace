@@ -12,8 +12,17 @@ from app.api.deps import get_db
 from app.schemas.common import Page
 from app.schemas.skill import SkillDetail, SkillListItem, SkillQuery
 from app.repos.skill_repo import SkillRepo
+from app.models.skill import Skill
+from app.repos.public_filters import is_public_skill_url
 
 router = APIRouter()
+
+
+def is_public_skill(skill: Skill) -> bool:
+    """Apply public visibility policy to a loaded skill row."""
+    if not skill.is_official or not skill.is_verified:
+        return False
+    return is_public_skill_url(skill.url)
 
 
 @router.get("", response_model=Page[SkillListItem])
@@ -23,8 +32,8 @@ async def list_skills(
     category: Optional[str] = None,
     tags: Optional[list[str]] = Query(None),
     sort: str = "popularity",
-    page: int = 1,
-    size: int = 20,
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
 ):
     """List skills with filtering"""
     repo = SkillRepo(db)
@@ -57,6 +66,6 @@ async def get_skill(
     """Get skill details."""
     repo = SkillRepo(db)
     skill = await repo.get_skill(id)
-    if not skill:
+    if not skill or not is_public_skill(skill):
         raise HTTPException(status_code=404, detail="Skill not found")
     return skill

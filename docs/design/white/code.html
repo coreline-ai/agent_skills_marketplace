@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BentoAI Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script crossorigin="anonymous" src="https://kit.fontawesome.com/a076d05399.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        sidebar: '#F8F9FA',
+                        main: '#FFFFFF',
+                        active: '#e9ecef',
+                        card: '#FFFFFF',
+                        border: '#e5e7eb',
+                        text: '#1f2937',
+                        'text-muted': '#6b7280',
+                        accent: '#6366f1', // Soft indigo/purple
+                        'accent-dark': '#4f46e5',
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'hover': '0 10px 25px -5px rgba(0, 0, 0, 0.08)',
+                    }
+                }
+            }
+        }
+    </script>
+<style data-purpose="scrollbar">::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F8F9FA;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+<style data-purpose="patterns">
+        .dot-pattern {
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.6;
+        }
+        .hero-border {
+             border: 1px solid #e2e8f0;
+        }
+        .search-icon-pos {
+            top: 50%;
+            transform: translateY(-50%);
+        }
+    </style>
+<style>* { box-sizing: border-box; }</style></head>
+<body class="bg-main text-text font-sans h-screen overflow-hidden flex selection:bg-accent selection:text-white">
+<aside class="bg-sidebar border-r border-border h-full flex flex-col flex-shrink-0 w-[280px]" data-purpose="sidebar">
+<div class="h-20 flex items-center px-6 border-b border-transparent">
+<div class="flex items-center gap-3">
+<img alt="BentoAI Logo" class="w-8 h-8 rounded-md object-cover shadow-sm bg-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMbyvc3L0E3xWPYd3GMefqPWPTGOdZdFxsDmaOMH4lgThAfWy7YHIH4NVTJ2kDb4brdOjoMPSLR7ifHhvZ3CYRDrLjQz7fdpyYMLhILZWfMV6_J-O_zEnDtmcaBxfmuKvScZCY0lC96qAaCsgcDF8sQUQky7ZCWIbk20m9ZIoNNMdAOR-_mZYPUi76tcpyUvRnnYqvUlSC4YDMg1Y_j5uZ5c-0gelUNYUnyWjaCaQISw-I6SljK2xm5S_XhJV4zVeHY1M09T2SElA"/>
+<span class="text-xl font-bold tracking-tight text-gray-900">Bento<span class="text-accent">AI</span></span>
+</div>
+</div>
+<nav class="flex-1 px-4 py-6 overflow-y-auto space-y-8">
+<div data-purpose="nav-section">
+<h3 class="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Platform</h3>
+<ul class="">
+<li>
+<a class="flex items-center gap-3 px-3 py-2.5 bg-white text-gray-900 shadow-sm border border-gray-100 rounded-[8px] transition-colors group" href="#">
+<i class="fa-solid fa-house w-5 text-center text-sm text-accent"></i>
+<span class="text-sm font-medium">Home</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-white/60 hover:shadow-sm rounded-lg transition-all group" href="#">
+<i class="fa-regular fa-compass w-5 text-center text-sm"></i>
+<span class="text-sm font-medium">Skills Library</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-white/60 hover:shadow-sm rounded-lg transition-all group" href="#">
+<i class="fa-solid fa-chart-simple w-5 text-center text-sm"></i>
+<span class="text-sm font-medium">Rankings</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-white/60 hover:shadow-sm rounded-lg transition-all group" href="#">
+<i class="fa-solid fa-puzzle-piece w-5 text-center text-sm"></i>
+<span class="text-sm font-medium">My Integrations</span>
+</a>
+</li>
+</ul>
+</div>
+<div data-purpose="nav-section">
+<h3 class="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Management</h3>
+<ul class="">
+<li>
+<a class="flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-white/60 hover:shadow-sm rounded-lg transition-all group" href="#">
+<i class="fa-solid fa-shield-halved w-5 text-center text-sm"></i>
+<span class="text-sm font-medium">Admin</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-white/60 hover:shadow-sm rounded-lg transition-all group" href="#">
+<i class="fa-solid fa-gear w-5 text-center text-sm"></i>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<div class="p-4 border-t border-border mt-auto">
+<div class="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/60 cursor-pointer transition-colors">
+<img alt="Alex Designer" class="w-9 h-9 rounded-full object-cover border border-gray-200 shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuALw_oBVfM6Eqq7gD0B9ES4HqyHKxyMkshA2ZRKaIq2juUj-k2N6-w6p2sGDc2ckETdr0TYaFMwriZLvt3BLUCXoyyYtBdAMn_gFkWJVUp9rmGSIunEbs5b8rhOzRLYPlxqClU5oqvQm2vQfegZAqc91KISf6hRbChwM3Q-HTlPCrPMP2cydhA745tpw1uMivQIcbUgqafqinN7FjZQBxoz5gddm7xGKjmCfHVpuXTwSquPgQvtJeU3mdE7jlGlMtcruEOxKzqgW5s"/>
+<div class="flex flex-col overflow-hidden relative pr-4">
+<span class="text-sm font-medium text-gray-900 truncate">Alex Designer</span>
+<span class="text-xs text-gray-500 truncate">alex@example.com</span>
+<i class="fa-solid fa-chevron-down text-gray-400 text-xs absolute right-0 top-1/2 -translate-y-1/2"></i></div>
+</div>
+</div>
+</aside>
+<main class="flex-1 overflow-y-auto relative bg-main" data-purpose="main-wrapper">
+<div class="max-w-[1600px] mx-auto p-8">
+<header class="flex justify-end items-center mb-8 gap-5" data-purpose="top-bar">
+<div class="relative w-64">
+<span class="absolute left-3 search-icon-pos text-gray-400 text-sm">
+<i class="fa-solid fa-magnifying-glass"></i>
+</span>
+<input class="w-full bg-[#F3F4F6] text-sm text-gray-800 placeholder-gray-400 border border-transparent focus:bg-white focus:border-accent focus:ring-0 rounded-full pl-[36px] pr-4 py-2 transition-all shadow-sm" placeholder="Search skills..." type="text"/>
+</div>
+<button class="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+<i class="fa-regular fa-bell"></i>
+</button>
+<button class="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+<i class="fa-regular fa-sun"></i>
+</button>
+</header>
+<section class="relative rounded-[20px] hero-border overflow-hidden mb-12 bg-gray-50/50" data-purpose="hero-banner">
+<div class="absolute inset-0 dot-pattern pointer-events-none"></div>
+<div class="relative z-10 flex flex-col md:flex-row items-center justify-between p-8 md:p-12 gap-8">
+<div class="flex-1 space-y-6 max-w-2xl">
+<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] bg-white text-gray-700 text-[10px] font-bold tracking-[1px] uppercase border border-gray-200 shadow-sm">
+<i class="fa-solid fa-bolt text-accent"></i>
+THE MARKETPLACE FOR AI MINDS
+</span>
+<h1 class="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+                            Unlock Your AI's <br/> <span class="text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-500">Potential</span>
+</h1>
+<p class="text-gray-600 text-lg leading-relaxed max-w-lg">
+                            Discover, integrate, and deploy high-quality skills. Community-driven, verified, and ready to run.
+                        </p>
+<div class="flex flex-wrap gap-4 pt-2">
+<button class="px-6 py-3 bg-gray-900 text-white border border-gray-900 font-medium rounded-full hover:bg-gray-800 hover:shadow-lg transition-all text-sm mr-2">Browse Skills Library</button>
+<button class="px-6 py-3 border border-gray-300 bg-white text-gray-700 font-medium rounded-full hover:border-gray-400 hover:bg-gray-50 transition-colors text-sm">View Leaderboard</button>
+</div>
+</div>
+<div class="w-full max-w-[320px] md:max-w-[400px] flex-shrink-0 relative">
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-blue-100/60 blur-[60px] rounded-full pointer-events-none"></div>
+<img alt="AI Robot Illustration" class="w-full h-auto object-contain relative z-10 drop-shadow-xl filter saturate-[0.8]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsp3nkRcPjUJSXxoHaBpp1Ar0Gi4PJMCZn-xJzzE6ahZ78wZb8_T6cgfpTzkBBeKTlHKw2APV-Wz0aD670qH3nSmxS4-YdI_5wmTGh54kksTQtgW2JuWW9MOymqmbj8KhqjwukaloUS7DoI1vB5-JfnGXR_ZigCSMgIwkleL734fQWFtC8bzlCBK1jVsobtqs6_e0-WKj7o7hUnbEuWkayND8rD5J5h10nDa0cVKfT__-DUJIRHhKgPdLqunSo4QOeU8aMei5Z-H8"/>
+</div>
+</div>
+</section>
+<section data-purpose="trending-skills">
+<div class="flex items-center justify-between mb-6">
+<h2 class="text-xl font-bold text-gray-900">Trending Skills</h2>
+<a class="text-[0.9rem] text-gray-500 hover:text-accent transition-colors flex items-center gap-1 group" href="#">
+                        See All 
+                        <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<article class="bg-white border border-gray-100 rounded-xl p-6 shadow-soft hover:shadow-hover hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group">
+<div class="flex justify-between items-start mb-4">
+<span class="px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider bg-orange-50 text-orange-600 border border-orange-100">DATA</span>
+</div>
+<h3 class="text-gray-900 font-bold mb-2 group-hover:text-accent transition-colors text-lg">hugging-face-model-trainer</h3>
+<p class="text-sm mb-6 flex-1 line-clamp-2 text-gray-500 leading-relaxed">
+                            A comprehensive tool to train and fine-tune models directly from the Hugging Face hub with ease.
+                        </p>
+<div class="flex items-center justify-between border-t border-gray-100 pt-4 text-xs text-gray-400 mt-auto">
+<div class="flex items-center gap-4">
+<span class="flex items-center gap-1.5 hover:text-gray-600 transition-colors"><i class="fa-regular fa-star"></i> <span class="font-medium">0</span></span>
+<span class="flex items-center gap-1.5 hover:text-gray-600 transition-colors"><i class="fa-regular fa-eye"></i> <span class="font-medium">1.2k</span></span>
+</div>
+<a class="text-xs font-bold text-gray-900 flex items-center gap-1 hover:text-accent tracking-wider transition-colors" href="#">
+                                DETAILS <i class="fa-solid fa-chevron-right text-[10px]"></i>
+</a>
+</div>
+</article>
+<article class="bg-white border border-gray-100 rounded-xl p-6 shadow-soft hover:shadow-hover hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group">
+<div class="flex justify-between items-start mb-4">
+<span class="px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider bg-blue-50 text-blue-600 border border-blue-100">CODING</span>
+</div>
+<h3 class="text-gray-900 font-bold mb-2 group-hover:text-accent transition-colors text-lg">docx</h3>
+<p class="text-sm mb-6 flex-1 line-clamp-2 text-gray-500 leading-relaxed">
+                            Advanced document parsing and generation utilities for Word documents in automated workflows.
+                        </p>
+<div class="flex items-center justify-between border-t border-gray-100 pt-4 text-xs text-gray-400 mt-auto">
+<div class="flex items-center gap-4">
+<span class="flex items-center gap-1.5 hover:text-gray-600 transition-colors"><i class="fa-regular fa-star"></i> <span class="font-medium">24</span></span>
+<span class="flex items-center gap-1.5 hover:text-gray-600 transition-colors"><i class="fa-regular fa-eye"></i> <span class="font-medium">850</span></span>
+</div>
+<a class="text-xs font-bold text-gray-900 flex items-center gap-1 hover:text-accent tracking-wider transition-colors" href="#">
+                                DETAILS <i class="fa-solid fa-chevron-right text-[10px]"></i>
+</a>
+</div>
+</article>
+<article class="bg-white border border-gray-100 rounded-xl p-6 shadow-soft hover:shadow-hover hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group">
+<div class="flex justify-between items-start mb-4">
+<span class="px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider bg-blue-50 text-blue-600 border border-blue-100">CODING</span>
+</div>
+<h3 class="text-gray-900 font-bold mb-2 group-hover:text-accent transition-colors text-lg">Bug Fixing Guide</h3>
+<p class="text-sm mb-6 flex-1 line-clamp-2 text-gray-500 leading-relaxed">
+                            Automated analysis of stack traces and code snippets to suggest potential fixes and improvements.
+                        </p>
+<div class="flex items-center justify-between border-t border-gray-100 pt-4 text-xs text-gray-400 mt-auto">
+<div class="flex items-center gap-4">
+<span class="flex items-center gap-1.5 hover:text-gray-600 transition-colors"><i class="fa-regular fa-star"></i> <span class="font-medium">12</span></span>
+<span class="flex items-center gap-1.5 hover:text-gray-600 transition-colors"><i class="fa-regular fa-eye"></i> <span class="font-medium">340</span></span>
+</div>
+<a class="text-xs font-bold text-gray-900 flex items-center gap-1 hover:text-accent tracking-wider transition-colors" href="#">
+                                DETAILS <i class="fa-solid fa-chevron-right text-[10px]"></i>
+</a>
+</div>
+</article>
+<article class="bg-white border border-gray-100 rounded-xl p-6 shadow-soft hover:shadow-hover hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group">
+<div class="flex justify-between items-start mb-4">
+<span class="px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100">RESEARCH</span>
+</div>
+<h3 class="text-gray-900 font-bold mb-2 group-hover:text-accent transition-colors text-lg">Research And Compare</h3>
+<p class="text-sm mb-6 flex-1 line-clamp-2 text-gray-500 leading-relaxed">
+                            Gather data from multiple sources to create comprehensive comparison tables and reports.
+                        </p>
+<div class="flex items-center justify-between border-t border-gray-100 pt-4 text-xs text-gray-400 mt-auto">
+<div class="flex items-center gap-4">
+<span class="flex items-center gap-1.5 hover:text-gray-600 transition-colors"><i class="fa-regular fa-star"></i> <span class="font-medium">5</span></span>
+<span class="flex items-center gap-1.5 hover:text-gray-600 transition-colors"><i class="fa-regular fa-eye"></i> <span class="font-medium">210</span></span>
+</div>
+<a class="text-xs font-bold text-gray-900 flex items-center gap-1 hover:text-accent tracking-wider transition-colors" href="#">
+                                DETAILS <i class="fa-solid fa-chevron-right text-[10px]"></i>
+</a>
+</div>
+</article>
+<article class="bg-white border border-gray-100 rounded-xl p-6 shadow-soft hover:shadow-hover hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group">
+<div class="flex justify-between items-start mb-4">
+<span class="px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider bg-blue-50 text-blue-600 border border-blue-100">CODING</span>
+</div>
+<h3 class="text-gray-900 font-bold mb-2 group-hover:text-accent transition-colors text-lg">pptx</h3>
+<p class="text-sm mb-6 flex-1 line-clamp-2 text-gray-500 leading-relaxed">
+                            Generate and modify PowerPoint presentations programmatically using structured data inputs.
+                        </p>
+<div class="flex items-center justify-between border-t border-gray-100 pt-4 text-xs text-gray-400 mt-auto">
+<div class="flex items-center gap-4">
+<span class="flex items-center gap-1.5 hover:text-gray-600 transition-colors"><i class="fa-regular fa-star"></i> <span class="font-medium">8</span></span>
+<span class="flex items-center gap-1.5 hover:text-gray-600 transition-colors"><i class="fa-regular fa-eye"></i> <span class="font-medium">455</span></span>
+</div>
+<a class="text-xs font-bold text-gray-900 flex items-center gap-1 hover:text-accent tracking-wider transition-colors" href="#">
+                                DETAILS <i class="fa-solid fa-chevron-right text-[10px]"></i>
+</a>
+</div>
+</article>
+<article class="bg-white border border-gray-100 rounded-xl p-6 shadow-soft hover:shadow-hover hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group">
+<div class="flex justify-between items-start mb-4">
+<span class="px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider bg-teal-50 text-teal-600 border border-teal-100">TOOLS</span>
+</div>
+<h3 class="text-gray-900 font-bold mb-2 group-hover:text-accent transition-colors text-lg">Building Agents Using Anthropic</h3>
+<p class="text-sm mb-6 flex-1 line-clamp-2 text-gray-500 leading-relaxed">
+                            A step-by-step framework for deploying Claude-based agents for complex reasoning tasks.
+                        </p>
+<div class="flex items-center justify-between border-t border-gray-100 pt-4 text-xs text-gray-400 mt-auto">
+<div class="flex items-center gap-4">
+<span class="flex items-center gap-1.5 hover:text-gray-600 transition-colors"><i class="fa-regular fa-star"></i> <span class="font-medium">42</span></span>
+<span class="flex items-center gap-1.5 hover:text-gray-600 transition-colors"><i class="fa-regular fa-eye"></i> <span class="font-medium">2.1k</span></span>
+</div>
+<a class="text-xs font-bold text-gray-900 flex items-center gap-1 hover:text-accent tracking-wider transition-colors" href="#">
+                                DETAILS <i class="fa-solid fa-chevron-right text-[10px]"></i>
+</a>
+</div>
+</article>
+</div>
+</section>
+<footer class="mt-12 text-center text-xs text-gray-400 pb-8">
+                © 2023 BentoAI Platform. All rights reserved.
+            </footer>
+</div>
+</main>
+
+</body></html>

@@ -33,5 +33,10 @@ class SkillSourceLink(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     skill: Mapped["Skill"] = relationship("Skill", back_populates="source_links")
     source: Mapped["SkillSource"] = relationship("SkillSource")
 
+    @property
+    def url(self) -> str:
+        """Expose a URL field for API schemas; default to external_id."""
+        return self.external_id
+
     def __repr__(self) -> str:
         return f"<SkillSourceLink {self.skill_id}-{self.source_id}>"

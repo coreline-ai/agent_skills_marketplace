@@ -90,6 +90,8 @@ graph LR
 cp .env.example .env
 ```
 
+참고: 프론트엔드(Next.js)는 `web/.env`를 별도로 사용합니다. `web/.env`에는 `NEXT_PUBLIC_API_URL` 같은 **URL만** 넣고, `GITHUB_TOKEN`/`GLM_API_KEY` 같은 **시크릿은 반드시 레포 루트 `.env`에만** 넣어야 워커가 주기적으로 수집/검색을 수행합니다.
+
 ### 2. 서비스 실행
 ```bash
 docker compose up --build -d

@@ -7,7 +7,12 @@ from typing import Optional
 async def get_http_client() -> AsyncClient:
     """Get configured HTTP client."""
     timeout = Timeout(30.0, connect=10.0)
-    return AsyncClient(timeout=timeout, follow_redirects=True)
+    # Some directories block default http clients without a UA.
+    headers = {
+        "User-Agent": "agent-skills-marketplace/1.0",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    }
+    return AsyncClient(timeout=timeout, follow_redirects=True, headers=headers)
 
 async def fetch_text(url: str, client: Optional[AsyncClient] = None) -> Optional[str]:
     """Fetch text content from URL."""

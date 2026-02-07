@@ -1,31 +1,117 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #000000;
+  --accent: #FFD600;
+  --shadow-color: rgba(0, 0, 0, 1);
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #ffffff;
+  --shadow-color: rgba(255, 255, 255, 0);
+  /* No shadows in dark mode */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-accent: var(--accent);
 }
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    background-color: var(--background);
+    color: var(--foreground);
+    @apply antialiased selection:bg-accent selection:text-black;
+    transition: background-color 0.2s, color 0.2s;
+  }
+
+  /* Prevent markdown code blocks from breaking card/layout widths. */
+  .prose pre {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+
+  /* Inline code can contain long tokens; allow wrapping to avoid overflow. */
+  .prose code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* Keep code blocks readable (no forced wrapping inside fenced code). */
+  .prose pre code {
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+}
+
+@layer utilities {
+
+  /* Bulletproof Inversion Utility */
+  .bg-invert {
+    background-color: var(--foreground) !important;
+    color: var(--background) !important;
+  }
+
+  /* High-Specificity Theme Safety Overrides */
+  .dark .bg-invert,
+  .dark .bg-white,
+  .dark .bg-accent,
+  .dark .text-black,
+  .dark [class*="bg-invert"] {
+    color: #000000 !important;
+  }
+
+  .border-main {
+    border-color: var(--foreground) !important;
+  }
+
+  .border-invert {
+    border-color: var(--background) !important;
+  }
+
+  /* Dynamic Neo-Shadow */
+  .neo-shadow {
+    box-shadow: 6px 6px 0px 0px var(--shadow-color);
+  }
+
+  .neo-shadow-sm {
+    box-shadow: 3px 3px 0px 0px var(--shadow-color);
+  }
+
+  .neo-shadow-hover {
+    @apply transition-all duration-200;
+  }
+
+  :root:not(.dark) .neo-shadow-hover:hover {
+    box-shadow: 2px 2px 0px 0px var(--shadow-color);
+    transform: translate(2px, 2px);
+  }
+
+  /* Dot Grid */
+  .bg-grid {
+    background-size: 40px 40px;
+    background-image: radial-gradient(circle, #e5e7eb 1px, transparent 1px);
+  }
+
+  .dark .bg-grid {
+    background-image: radial-gradient(circle, #333 1px, transparent 1px);
   }
 }
 
 @layer components {
+
+  /* Theme-Aware Container */
+  .neo-container {
+    background-color: var(--background);
+    color: var(--foreground);
+    border: 2px solid var(--foreground);
+  }
+
   .container-responsive {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }

@@ -50,6 +50,7 @@ class SkillBase(BaseModel):
 
     # Basic Content
     summary: Optional[str] = None
+    overview: Optional[str] = None
     content: Optional[str] = None
     author: Optional[str] = None
     url: Optional[str] = None # Computed in Repo

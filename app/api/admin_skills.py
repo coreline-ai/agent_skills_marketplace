@@ -23,7 +23,11 @@ async def create_skill(
 ):
     """Create a new skill manually."""
     repo = AdminSkillRepo(db)
-    skill = await repo.create_skill(payload)
+    try:
+        skill = await repo.create_skill(payload)
+    except ValueError as exc:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     await db.commit()
     return skill
 
@@ -42,8 +46,12 @@ async def update_skill(
     skill = await skill_repo.get_skill(id)
     if not skill:
         raise HTTPException(status_code=404, detail="Skill not found")
-        
-    updated_skill = await admin_repo.update_skill(skill, payload)
+
+    try:
+        updated_skill = await admin_repo.update_skill(skill, payload)
+    except ValueError as exc:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     await db.commit()
     return updated_skill
 

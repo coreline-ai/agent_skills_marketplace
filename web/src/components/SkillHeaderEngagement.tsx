@@ -12,6 +12,12 @@ interface SkillHeaderEngagementProps {
     installUrl: string | null;
 }
 
+interface EventTrackResponse {
+    status: string;
+    event_id: string;
+    counted: boolean;
+}
+
 function getSessionId(): string {
     const key = "skill_session_id";
     const cached = localStorage.getItem(key);
@@ -21,6 +27,11 @@ function getSessionId(): string {
     return next;
 }
 
+function isFavorited(skillId: string): boolean {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(`favorite:${skillId}`) === "1";
+}
+
 export function SkillHeaderEngagement({
     skillId,
     skillName,
@@ -28,9 +39,10 @@ export function SkillHeaderEngagement({
     initialViews,
     installUrl,
 }: SkillHeaderEngagementProps) {
+    const favoriteKey = `favorite:${skillId}`;
     const [stars, setStars] = useState(initialStars || 0);
     const [views, setViews] = useState(initialViews || 0);
-    const [favorited, setFavorited] = useState(false);
+    const [favorited, setFavorited] = useState(() => isFavorited(skillId));
     const [shared, setShared] = useState(false);
 
     useEffect(() => {
@@ -39,15 +51,20 @@ export function SkillHeaderEngagement({
         if (sessionStorage.getItem(viewKey) === "1") return;
         sessionStorage.setItem(viewKey, "1");
 
-        api.post("/events/view", {
+        api.post<EventTrackResponse>("/events/view", {
             type: "view",
             skill_id: skillId,
             session_id: getSessionId(),
             source: "web",
             context: "skill-detail",
         })
-            .then(() => setViews((prev) => prev + 1))
+            .then((response) => {
+                if (response.counted) {
+                    setViews((prev) => prev + 1);
+                }
+            })
             .catch((error) => {
+                sessionStorage.removeItem(viewKey);
                 console.warn("Failed to track view event", error);
             });
     }, [skillId]);
@@ -55,18 +72,22 @@ export function SkillHeaderEngagement({
     const onFavorite = async () => {
         if (favorited) return;
         setFavorited(true);
-        setStars((prev) => prev + 1);
-        localStorage.setItem(`favorite:${skillId}`, "1");
 
         try {
-            await api.post("/events/favorite", {
+            const response = await api.post<EventTrackResponse>("/events/favorite", {
                 type: "favorite",
                 skill_id: skillId,
                 session_id: getSessionId(),
                 source: "web",
                 context: "detail-favorite",
             });
+            localStorage.setItem(favoriteKey, "1");
+            if (response.counted) {
+                setStars((prev) => prev + 1);
+            }
         } catch (error) {
+            setFavorited(false);
+            localStorage.removeItem(favoriteKey);
             console.warn("Failed to track favorite event", error);
         }
     };
@@ -92,39 +113,37 @@ export function SkillHeaderEngagement({
 
     return (
         <>
-            <div className="flex justify-end">
-                <div className="flex gap-2">
+            <div className="flex justify-end mb-6">
+                <div className="flex gap-3">
                     <button
                         type="button"
                         onClick={onFavorite}
                         title={favorited ? "Favorited" : "Add favorite"}
-                        className={`p-2 transition-colors border border-gray-200 rounded-lg hover:bg-gray-50 ${
-                            favorited ? "text-yellow-500" : "text-gray-400 hover:text-yellow-500"
-                        }`}
+                        className={`p-3 border-2 border-main rounded-lg transition-all neo-shadow neo-shadow-hover active:translate-x-[4px] active:translate-y-[4px] active:shadow-none ${favorited ? "bg-accent text-black" : "bg-background text-foreground hover:bg-accent hover:text-black"
+                            }`}
                     >
-                        <Star className={`w-5 h-5 ${favorited ? "fill-yellow-500" : ""}`} />
+                        <Star className={`w-5 h-5 ${favorited ? "fill-black" : ""}`} />
                     </button>
                     <button
                         type="button"
                         onClick={onShare}
                         title={shared ? "Copied" : "Share"}
-                        className={`p-2 transition-colors border border-gray-200 rounded-lg hover:bg-gray-50 ${
-                            shared ? "text-green-600" : "text-gray-400 hover:text-blue-600"
-                        }`}
+                        className={`p-3 border-2 border-main rounded-lg transition-all neo-shadow neo-shadow-hover active:translate-x-[4px] active:translate-y-[4px] active:shadow-none ${shared ? "bg-green-500 text-white" : "bg-background text-foreground hover:bg-accent hover:text-black"
+                            }`}
                     >
                         <Share2 className="w-5 h-5" />
                     </button>
                 </div>
             </div>
 
-            <div className="mt-8 flex items-center gap-6 pt-6 border-t border-gray-100">
-                <div className="flex items-center gap-2 text-gray-600">
-                    <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                    <span className="font-medium">{stars}</span> stars
+            <div className="mt-8 flex flex-wrap items-center gap-6 pt-6 border-t-2 border-main">
+                <div className="flex items-center gap-2 font-bold">
+                    <Star className="w-6 h-6 fill-current" />
+                    <span className="text-xl">{stars}</span> stars
                 </div>
-                <div className="flex items-center gap-2 text-gray-600">
-                    <Eye className="w-5 h-5" />
-                    <span className="font-medium">{views}</span> views
+                <div className="flex items-center gap-2 font-bold">
+                    <Eye className="w-6 h-6" />
+                    <span className="text-xl">{views}</span> views
                 </div>
                 <div className="ml-auto">
                     {installUrl ? (
@@ -132,17 +151,17 @@ export function SkillHeaderEngagement({
                             href={installUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 bg-gray-900 text-white px-5 py-2.5 rounded-lg hover:bg-gray-800 transition-colors font-medium"
+                            className="inline-flex items-center gap-2 bg-invert border-2 border-main px-6 py-3 rounded-lg font-bold text-lg neo-shadow neo-shadow-hover active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
                         >
-                            <Download className="w-4 h-4" /> Open Source
+                            <Download className="w-5 h-5" /> Open Source
                         </a>
                     ) : (
                         <button
                             type="button"
                             disabled
-                            className="inline-flex items-center gap-2 bg-gray-400 text-white px-5 py-2.5 rounded-lg font-medium cursor-not-allowed"
+                            className="inline-flex items-center gap-2 bg-foreground/10 text-foreground/50 border-2 border-dashed border-main px-6 py-3 rounded-lg font-bold text-lg cursor-not-allowed opacity-70"
                         >
-                            <Download className="w-4 h-4" /> No Source URL
+                            <Download className="w-5 h-5" /> No Source URL
                         </button>
                     )}
                 </div>

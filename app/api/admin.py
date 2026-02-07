@@ -1,9 +1,9 @@
 """Admin Auth & Raw Skills API."""
 
-from datetime import timedelta, datetime
+from datetime import timedelta
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,39 +22,18 @@ router = APIRouter()
 @router.post("/login")
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     """Admin login."""
-    # DEBUGGING: Write to file to persist logs
-    with open("auth_debug.log", "a") as f:
-        f.write(f"\\n--- Login Attempt ---\\n")
-        f.write(f"Timestamp: {datetime.now()}\\n")
-        f.write(f"Received Username: '{form_data.username}'\\n")
-        f.write(f"Settings Username: '{settings.admin_username}'\\n")
-        f.write(f"Password Len: {len(form_data.password)}\\n")
-        f.write(f"Password Repr: {repr(form_data.password)}\\n") # REVEAL THE MYSTERY
-        
-        # Verify
-        try:
-            is_valid = verify_password(form_data.password, settings.admin_password_hash)
-            f.write(f"Hash Verification Result: {is_valid}\\n")
-        except Exception as e:
-            f.write(f"Hash Verification Error: {e}\\n")
-            is_valid = False
+    is_valid = verify_password(form_data.password, settings.admin_password_hash)
 
     if (
         form_data.username != settings.admin_username
         or not is_valid
     ):
-        with open("auth_debug.log", "a") as f:
-            f.write("Result: AUTH FAILED\\n")
-            
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-        
-    with open("auth_debug.log", "a") as f:
-        f.write("Result: AUTH SUCCESS\\n")
-    
+
     access_token_expires = timedelta(minutes=settings.jwt_expire_minutes)
     access_token = create_access_token(
         data={"sub": form_data.username}, expires_delta=access_token_expires
@@ -73,8 +52,8 @@ async def list_raw_skills(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[dict, Depends(require_admin)],
     status: Optional[str] = "pending",
-    page: int = 1,
-    size: int = 20,
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
 ):
     """List raw skills in queue."""
     stmt = select(RawSkill)
@@ -132,24 +111,86 @@ async def trigger_ingest(
 async def list_crawl_sources(
     current_user: Annotated[dict, Depends(require_admin)],
 ):
-    """List configured GitHub crawl sources."""
+    """List configured crawl sources with repository intent policy."""
     items = []
-    seen: set[str] = set()
+    seen_repos: set[str] = set()
+    seen_directories: set[str] = set()
 
     for source in SOURCES:
-        if source.get("type") != "github_repo":
+        source_type = str(source.get("type", "")).strip()
+        if source_type == "github_repo":
+            repo_full_name = str(source.get("repo_full_name", "")).strip()
+            if not repo_full_name or repo_full_name in seen_repos:
+                continue
+            seen_repos.add(repo_full_name)
+            items.append(
+                {
+                    "id": source.get("id"),
+                    "source_type": "github_repo",
+                    "repo_full_name": repo_full_name,
+                    "url": f"https://github.com/{repo_full_name}",
+                    "policy": {
+                        "min_repo_type": source.get("min_repo_type", "skills_focused"),
+                        "allowed_path_globs": source.get("allowed_path_globs") or [],
+                    },
+                }
+            )
             continue
-        repo_full_name = str(source.get("repo_full_name", "")).strip()
-        if not repo_full_name or repo_full_name in seen:
+
+        if source_type == "web_directory":
+            directory_url = str(source.get("url", "")).strip()
+            if not directory_url or directory_url in seen_directories:
+                continue
+            seen_directories.add(directory_url)
+            items.append(
+                {
+                    "id": source.get("id"),
+                    "source_type": "web_directory",
+                    "repo_full_name": None,
+                    "url": directory_url,
+                    "policy": {
+                        "min_repo_type": source.get("min_repo_type", "skills_only"),
+                        "max_repos": source.get("max_repos"),
+                        "max_sitemap_pages": source.get("max_sitemap_pages"),
+                        "allowed_path_globs": source.get("allowed_path_globs") or [],
+                    },
+                }
+            )
             continue
-        seen.add(repo_full_name)
-        items.append(
-            {
-                "id": source.get("id"),
-                "repo_full_name": repo_full_name,
-                "url": f"https://github.com/{repo_full_name}",
-            }
+
+        if source_type == "github_search":
+            source_id = str(source.get("id", "")).strip()
+            if not source_id:
+                continue
+            queries = [str(q).strip() for q in source.get("queries", []) if str(q).strip()]
+            preview_query = queries[0] if queries else ""
+            search_url = "https://github.com/search"
+            if preview_query:
+                from urllib.parse import quote_plus
+                search_url = f"https://github.com/search?q={quote_plus(preview_query)}&type=code"
+            items.append(
+                {
+                    "id": source_id,
+                    "source_type": "github_search",
+                    "repo_full_name": None,
+                    "url": search_url,
+                    "policy": {
+                        "search_mode": source.get("search_mode", "code"),
+                        "require_token": source.get("require_token", True),
+                        "query_count": len(queries),
+                        "min_repo_type": source.get("min_repo_type", "skills_only"),
+                        "max_repos": source.get("max_repos"),
+                        "max_pages": source.get("max_pages"),
+                        "allowed_path_globs": source.get("allowed_path_globs") or [],
+                    },
+                }
+            )
+
+    def _sort_key(item: dict) -> tuple[str, str]:
+        return (
+            str(item.get("source_type", "")),
+            str(item.get("repo_full_name") or item.get("url") or "").lower(),
         )
 
-    items.sort(key=lambda item: item["repo_full_name"].lower())
+    items.sort(key=_sort_key)
     return items

@@ -9,11 +9,24 @@ from app.models.skill_source import SkillSource
 
 async def _ensure_source(db: AsyncSession, name: str, url: str) -> SkillSource:
     """Ensure source exists."""
-    stmt = select(SkillSource).where(
-        (SkillSource.name == name) | (SkillSource.url == url)
+    # Prefer stable key lookup by source name first; legacy data may contain
+    # duplicate names with different URLs, so avoid scalar_one_or_none() on OR.
+    by_name = await db.execute(
+        select(SkillSource)
+        .where(SkillSource.name == name)
+        .order_by(SkillSource.created_at.asc())
+        .limit(1)
     )
-    result = await db.execute(stmt)
-    source = result.scalar_one_or_none()
+    source = by_name.scalar_one_or_none()
+
+    if not source and url:
+        by_url = await db.execute(
+            select(SkillSource)
+            .where(SkillSource.url == url)
+            .order_by(SkillSource.created_at.asc())
+            .limit(1)
+        )
+        source = by_url.scalar_one_or_none()
     
     if not source:
         source = SkillSource(name=name, url=url, type="github", is_active=True)

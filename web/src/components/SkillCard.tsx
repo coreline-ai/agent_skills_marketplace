@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { Star, Eye } from "lucide-react";
+import { Star, Eye, ArrowUpRight } from "lucide-react";
 
 interface SkillCardProps {
     id: string;
     name: string;
     slug: string;
     description: string;
+    summary?: string | null;
     category: string;
     views: number;
     stars: number;
@@ -13,38 +14,45 @@ interface SkillCardProps {
     rank?: number;
 }
 
-export function SkillCard({ id, name, slug, description, category, views, stars, rank }: SkillCardProps) {
+export function SkillCard({ id, name, slug, description, summary, category, views, stars, rank }: SkillCardProps) {
+    const blurb = (summary && summary.trim()) ? summary : description;
     return (
-        <Link href={`/skills/${id}`} className="block group" aria-label={`${name} (${slug})`}>
-            <div className="h-full bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-xl hover:border-blue-100 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-col">
+        <Link href={`/skills/${id}`} className="block group h-full" aria-label={`${name} (${slug})`}>
+            <div className="h-full bg-background text-foreground rounded-lg border-2 border-main p-6 neo-shadow neo-shadow-hover relative overflow-hidden flex flex-col transition-all">
                 {rank && (
-                    <div className="absolute top-0 right-0 bg-blue-600 text-white px-3 py-1 rounded-bl-xl font-bold text-sm shadow-sm">
+                    <div className="absolute top-0 right-0 bg-accent text-black border-l-2 border-b-2 border-main px-4 py-2 font-black text-lg z-10">
                         #{rank}
                     </div>
                 )}
-                <div className="mb-4">
-                    <span className="inline-block px-3 py-1 text-xs font-semibold text-blue-700 bg-blue-50 rounded-full mb-3">
+
+                <div className="mb-4 pt-2">
+                    <span className="inline-block px-3 py-1 text-xs font-bold uppercase tracking-wider bg-invert mb-3 border border-main">
                         {category}
                     </span>
-                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
+                    <h3 className="text-2xl font-extrabold group-hover:underline decoration-2 decoration-accent underline-offset-4 line-clamp-2">
                         {name}
                     </h3>
                 </div>
-                <p className="text-gray-600 text-sm mb-6 line-clamp-2 leading-relaxed flex-grow">
-                    {description}
+
+                <p className="text-foreground/80 text-sm font-medium mb-6 line-clamp-3 leading-relaxed flex-grow">
+                    {blurb}
                 </p>
-                <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-50">
+
+                <div className="flex items-center justify-between text-sm font-bold pt-4 border-t-2 border-main mt-auto">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1.5">
-                            <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                            <span className="font-medium text-gray-700">{stars}</span>
+                            <Star className="w-5 h-5 fill-current" />
+                            <span>{stars}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <Eye className="w-4 h-4 text-gray-400" />
-                            <span className="font-medium text-gray-700">{views}</span>
+                            <Eye className="w-5 h-5" />
+                            <span>{views}</span>
                         </div>
                     </div>
-                    <span className="text-xs font-medium text-blue-600 group-hover:underline">View Details</span>
+                    <div className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                        <span>Details</span>
+                        <ArrowUpRight className="w-4 h-4" />
+                    </div>
                 </div>
             </div>
         </Link>

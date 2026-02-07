@@ -15,13 +15,18 @@ def parse_skill_md(content: str) -> dict[str, Any]:
     
     metadata = {}
     markdown_content = content
+    frontmatter_raw: Optional[str] = None
+    frontmatter_error: Optional[str] = None
     
     if match:
         try:
             yaml_content = match.group(1)
+            frontmatter_raw = yaml_content
             metadata = yaml.safe_load(yaml_content) or {}
             markdown_content = content[match.end():].strip()
         except yaml.YAMLError:
+            frontmatter_raw = match.group(1)
+            frontmatter_error = "invalid_frontmatter"
             print("YAML Error parsing frontmatter")
 
     # Normalize some common fields if needed
@@ -30,7 +35,9 @@ def parse_skill_md(content: str) -> dict[str, Any]:
         
     return {
         "metadata": metadata,
-        "content": markdown_content
+        "content": markdown_content,
+        "frontmatter_raw": frontmatter_raw,
+        "frontmatter_error": frontmatter_error,
     }
 
 def normalize_category(category_name: str, aliases: list[CategoryAlias]) -> str:

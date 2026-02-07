@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 
 from app.models.skill import Skill
 from app.models.skill_popularity import SkillPopularity
+from app.repos.public_filters import public_skill_conditions
 
 class RankingRepo:
     def __init__(self, db: AsyncSession):
@@ -17,8 +18,7 @@ class RankingRepo:
         stmt = (
             select(Skill)
             .outerjoin(Skill.popularity)
-            .where(Skill.is_official.is_(True))
-            .where(Skill.is_verified.is_(True))
+            .where(*public_skill_conditions())
             .order_by(desc(SkillPopularity.score).nulls_last(), desc(Skill.created_at))
             .limit(10)
             .options(

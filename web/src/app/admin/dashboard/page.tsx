@@ -23,8 +23,19 @@ interface RawSkillListResponse {
 
 interface CrawlSourceItem {
     id: string;
-    repo_full_name: string;
+    source_type: "github_repo" | "web_directory" | "github_search";
+    repo_full_name: string | null;
     url: string;
+    policy?: {
+        min_repo_type?: string;
+        max_repos?: number;
+        max_sitemap_pages?: number;
+        max_pages?: number;
+        query_count?: number;
+        search_mode?: string;
+        require_token?: boolean;
+        allowed_path_globs?: string[];
+    };
 }
 
 export default function AdminDashboardPage() {
@@ -231,8 +242,8 @@ export default function AdminDashboardPage() {
 
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                    <h3 className="font-bold text-gray-900">GitHub Crawl Sources</h3>
-                    <span className="text-xs text-gray-500">{crawlSources.length} repos</span>
+                    <h3 className="font-bold text-gray-900">Crawl Sources</h3>
+                    <span className="text-xs text-gray-500">{crawlSources.length} sources</span>
                 </div>
                 <div className="p-0">
                     {loading ? (
@@ -242,11 +253,26 @@ export default function AdminDashboardPage() {
                             {crawlSources.map((source) => (
                                 <li key={source.id} className="px-6 py-4 hover:bg-gray-50">
                                     <div className="flex items-center justify-between gap-4">
-                                        <div className="min-w-0 flex items-center gap-2">
+                                        <div className="min-w-0 flex items-center gap-2 flex-wrap">
                                             <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-gray-100 text-gray-700 text-xs font-mono">
-                                                {source.repo_full_name}
+                                                {source.repo_full_name ?? source.url.replace(/^https?:\/\//, "")}
                                             </span>
-                                            <span className="text-[11px] text-gray-400 whitespace-nowrap">SKILL.md source</span>
+                                            <span className="inline-flex items-center px-2 py-1 rounded bg-blue-50 text-blue-700 text-[11px] font-medium">
+                                                {source.source_type}
+                                            </span>
+                                            <span className="text-[11px] text-gray-500 whitespace-nowrap">
+                                                {`min:${source.policy?.min_repo_type ?? "-"}`}
+                                            </span>
+                                            {typeof source.policy?.query_count === "number" && (
+                                                <span className="text-[11px] text-gray-500 whitespace-nowrap">
+                                                    {`queries:${source.policy.query_count}`}
+                                                </span>
+                                            )}
+                                            {typeof source.policy?.require_token === "boolean" && (
+                                                <span className="text-[11px] text-gray-500 whitespace-nowrap">
+                                                    {source.policy.require_token ? "token:required" : "token:optional"}
+                                                </span>
+                                            )}
                                         </div>
                                         <a
                                             href={source.url}
@@ -255,7 +281,7 @@ export default function AdminDashboardPage() {
                                             title={source.url}
                                             className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:underline whitespace-nowrap"
                                         >
-                                            {`github.com/${source.repo_full_name}`}
+                                            {source.repo_full_name ? `github.com/${source.repo_full_name}` : source.url}
                                             <ExternalLink className="w-4 h-4" />
                                         </a>
                                     </div>

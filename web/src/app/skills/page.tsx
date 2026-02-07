@@ -2,12 +2,14 @@ import { api } from "@/app/lib/api";
 import { SkillCard } from "@/components/SkillCard";
 import { Search } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 interface SkillListItem {
     id: string;
     name: string;
     slug: string;
     description?: string;
+    summary?: string | null;
     views: number;
     stars: number;
     score: number;
@@ -57,9 +59,10 @@ function buildSkillsHref(params: { q?: string; category?: string; page?: number 
 }
 
 export default async function SkillsPage(props: {
-    searchParams: { [key: string]: string | string[] | undefined };
+    // Next.js 15+ provides searchParams as a Promise in Server Components.
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-    const searchParams = props.searchParams;
+    const searchParams = await props.searchParams;
     const q = typeof searchParams.q === 'string' ? searchParams.q : undefined;
     const category = typeof searchParams.category === 'string' ? searchParams.category : undefined;
     const page = typeof searchParams.page === 'string' ? Number.parseInt(searchParams.page, 10) : 1;
@@ -69,64 +72,60 @@ export default async function SkillsPage(props: {
         getSkills({ q, category, page: safePage }),
         getCategories(),
     ]);
+
+    // If the user lands on an out-of-range page (e.g. after filtering), redirect to the last valid page.
+    if (data.pages > 0 && safePage > data.pages) {
+        redirect(buildSkillsHref({ q, category, page: data.pages }));
+    }
     const totalCategoryCount = categories.reduce((sum, item) => sum + (item.skill_count || 0), 0);
 
     return (
-        <div className="space-y-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h1 className="text-3xl font-bold text-gray-900">Explore Skills</h1>
-                <div className="text-sm text-gray-500">
-                    Showing {data.items.length} of {data.total} skills
+        <div className="space-y-10">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <h1 className="text-4xl font-black text-black dark:text-white tracking-tight mb-2">Explore Skills</h1>
+                    <div className="text-sm font-bold text-gray-600 dark:text-gray-400">
+                        Showing {data.items.length} of {data.total} skills
+                    </div>
                 </div>
 
                 {/* Simple Search Form */}
                 <form className="relative w-full md:w-96">
-                    <input
-                        name="q"
-                        defaultValue={q}
-                        placeholder="Search skills..."
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    />
-                    <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+                    <div className="flex flex-col md:flex-row items-center gap-6 bg-white dark:bg-black border-2 border-black dark:border-white p-6 neo-shadow dark:shadow-none rounded-xl">
+                        <div className="relative flex-1 w-full">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-black dark:text-white" />
+                            <input
+                                type="text"
+                                name="q"
+                                placeholder="Search skills (e.g., 'trading', 'writer')..."
+                                className="w-full pl-12 pr-4 py-4 bg-white dark:bg-black border-2 border-black dark:border-white text-black dark:text-white font-bold text-lg placeholder:text-gray-400 focus:outline-none focus:ring-0 transition-all"
+                                defaultValue={q}
+                            />
+                        </div>
+                    </div>
                     {category && <input type="hidden" name="category" value={category} />}
                 </form>
             </div>
 
-            <div className="space-y-3">
-                <p className="text-sm font-medium text-gray-700">Categories</p>
-                <div className="flex flex-wrap gap-2">
+            <div className="space-y-4">
+                <p className="text-sm font-bold uppercase tracking-wider">Categories</p>
+                <div className="flex flex-wrap gap-2 py-4">
                     <Link
                         href={buildSkillsHref({ q })}
-                        className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-                            !category
-                                ? "bg-blue-600 text-white border-blue-600"
-                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                        }`}
+                        className={`px-4 py-2 border-2 border-main font-bold text-sm transition-all ${!category ? 'bg-invert' : 'bg-background text-foreground hover:bg-accent hover:text-black'}`}
                     >
-                        <span className="inline-flex items-center gap-2">
-                            <span>All</span>
-                            <span className={`inline-flex items-center justify-center min-w-6 px-1.5 py-0.5 text-xs rounded-full ${
-                                !category ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-600"
-                            }`}>
-                                {totalCategoryCount}
-                            </span>
-                        </span>
+                        All ({totalCategoryCount})
                     </Link>
                     {categories.map((item) => (
                         <Link
                             key={item.id}
                             href={buildSkillsHref({ q, category: item.slug })}
-                            className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-                                category === item.slug
-                                    ? "bg-blue-600 text-white border-blue-600"
-                                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                            }`}
+                            className={`px-4 py-2 border-2 border-main font-bold text-sm transition-all ${category === item.slug ? 'bg-invert' : 'bg-background text-foreground hover:bg-accent hover:text-black'}`}
                         >
                             <span className="inline-flex items-center gap-2">
                                 <span>{item.name}</span>
-                                <span className={`inline-flex items-center justify-center min-w-6 px-1.5 py-0.5 text-xs rounded-full ${
-                                    category === item.slug ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-600"
-                                }`}>
+                                <span className={`inline-flex items-center justify-center min-w-6 px-1.5 py-0.5 text-xs rounded-full border border-current ${category === item.slug ? "bg-background text-foreground" : "bg-invert"
+                                    }`}>
                                     {item.skill_count || 0}
                                 </span>
                             </span>
@@ -135,7 +134,7 @@ export default async function SkillsPage(props: {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {data.items.length > 0 ? (
                     data.items.map((skill) => (
                         <SkillCard
@@ -144,6 +143,7 @@ export default async function SkillsPage(props: {
                             name={skill.name}
                             slug={skill.slug}
                             description={skill.description || "No description provided."}
+                            summary={skill.summary ?? null}
                             views={skill.views}
                             stars={skill.stars}
                             score={skill.score}
@@ -151,35 +151,41 @@ export default async function SkillsPage(props: {
                         />
                     ))
                 ) : (
-                    <div className="col-span-full text-center py-12 text-gray-500">
-                        No skills found matching your criteria.
+                    <div className="col-span-full text-center py-20 border-2 border-dashed border-black rounded-lg bg-gray-50">
+                        <p className="text-xl font-bold text-gray-500">No skills found matching your criteria.</p>
                     </div>
                 )}
             </div>
 
-            <div className="flex justify-center items-center gap-4 pt-8 border-t border-gray-100">
+            <div className="flex justify-center items-center gap-4 pt-8 border-t-2 border-main">
+                {safePage <= 1 ? (
+                    <span className="px-6 py-2 border-2 rounded-lg text-sm font-bold bg-foreground/5 text-foreground/40 cursor-not-allowed border-foreground/20">
+                        Previous
+                    </span>
+                ) : (
                     <Link
                         href={buildSkillsHref({ q, category, page: safePage - 1 })}
-                        className={`px-4 py-2 border rounded-md text-sm font-medium transition-colors ${safePage <= 1
-                            ? "border-gray-200 text-gray-300 pointer-events-none"
-                            : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                        }`}
+                        className="px-6 py-2 border-2 border-main rounded-lg text-sm font-bold transition-all bg-invert hover:bg-accent hover:text-black hover:translate-x-[1px] hover:translate-y-[1px]"
                     >
-                    Previous
-                </Link>
-                    <span className="text-sm font-medium text-gray-600">
-                        Page {data.page} of {data.pages}
+                        Previous
+                    </Link>
+                )}
+                <span className="text-sm font-bold bg-accent text-black px-3 py-1 rounded border-2 border-black">
+                    Page {data.page} of {data.pages}
+                </span>
+                {safePage >= data.pages ? (
+                    <span className="px-6 py-2 border-2 rounded-lg text-sm font-bold bg-foreground/5 text-foreground/40 cursor-not-allowed border-foreground/20">
+                        Next
                     </span>
+                ) : (
                     <Link
                         href={buildSkillsHref({ q, category, page: safePage + 1 })}
-                        className={`px-4 py-2 border rounded-md text-sm font-medium transition-colors ${safePage >= data.pages
-                            ? "border-gray-200 text-gray-300 pointer-events-none"
-                            : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                        }`}
+                        className="px-6 py-2 border-2 border-main rounded-lg text-sm font-bold transition-all bg-invert hover:bg-accent hover:text-black hover:translate-x-[1px] hover:translate-y-[1px]"
                     >
-                    Next
-                </Link>
+                        Next
+                    </Link>
+                )}
             </div>
-        </div>
+        </div >
     );
 }

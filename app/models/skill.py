@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from app.models.skill_tag import SkillTag
     from app.models.skill_popularity import SkillPopularity
     from app.models.skill_source_link import SkillSourceLink
+    from app.models.tag import Tag
 
 
 class Skill(Base, UUIDPrimaryKeyMixin, TimestampMixin):
@@ -26,6 +27,9 @@ class Skill(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     slug: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)  # owner/name
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # A markdown overview intended for the detail page (LLM-generated).
+    overview: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     author: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     url: Mapped[Optional[str]] = mapped_column(String, nullable=True) # Canonical URL
     
@@ -75,6 +79,23 @@ class Skill(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     def score(self) -> float:
         """Expose computed score from popularity relation."""
         return self.popularity.score if self.popularity else 0.0
+
+    @property
+    def tags(self) -> list["Tag"]:
+        """Expose tags for API schemas (derived from SkillTag associations)."""
+        tags: list["Tag"] = []
+        for assoc in self.tag_associations or []:
+            tag = getattr(assoc, "tag", None)
+            if tag:
+                tags.append(tag)
+        return tags
+
+    @property
+    def category_slug(self) -> Optional[str]:
+        """Expose category slug for API schemas."""
+        if self.category:
+            return getattr(self.category, "slug", None)
+        return None
 
     def __repr__(self) -> str:
         return f"<Skill {self.slug}>"

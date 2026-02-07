@@ -41,7 +41,11 @@ async def approve_skill(
 ):
     """Approve a raw skill (turns it into a real Skill)."""
     repo = AdminSkillRepo(db)
-    skill = await repo.create_skill(payload)
+    try:
+        skill = await repo.create_skill(payload)
+    except ValueError as exc:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     
     # Mark RawSkill as processed if linked
     if payload.source_link and "external_id" in payload.source_link:
