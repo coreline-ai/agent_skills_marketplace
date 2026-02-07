@@ -77,6 +77,24 @@ class Skill(SkillBase):
     tags: list[TagBase] = []
     source_links: list[SkillSourceLinkBase] = []
 
+class SkillListItem(BaseModel):
+    """Lightweight Skill representation for list endpoints."""
+
+    id: UUID
+    name: str
+    slug: str
+    description: Optional[str] = None
+    summary: Optional[str] = None
+    views: int = 0
+    stars: int = 0
+    score: float = 0.0
+    is_official: bool = False
+    category_slug: Optional[str] = None
+    category: Optional[CategoryBase] = None
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 class SkillFilter(BaseModel):
     q: Optional[str] = None
@@ -92,4 +110,3 @@ class SkillQuery(BaseModel):
     size: int = 20
     
 SkillDetail = Skill
-SkillListItem = Skill

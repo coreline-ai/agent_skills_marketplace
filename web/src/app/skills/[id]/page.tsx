@@ -1,9 +1,6 @@
-// Force dynamic for detail page to ensure fresh data
-export const dynamic = 'force-dynamic';
-
 import { api } from "@/app/lib/api";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, Box, Tag, Layers, FileText, Code, Globe, User, Calendar, Shield } from "lucide-react";
 import { SkillHeaderEngagement } from "@/components/SkillHeaderEngagement";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -43,6 +40,9 @@ interface SkillDetail {
     outputs?: Record<string, unknown> | null;
 }
 
+// Ensure dynamic rendering
+export const dynamic = 'force-dynamic';
+
 async function getSkill(id: string) {
     try {
         return await api.get<SkillDetail>(`/skills/${id}`);
@@ -57,9 +57,10 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
 
     if (!skill) {
         return (
-            <div className="text-center py-20">
-                <h1 className="text-2xl font-bold text-gray-900">Skill not found</h1>
-                <Link href="/skills" className="text-blue-600 hover:underline mt-4 inline-block">
+            <div className="text-center py-20 bg-gray-50 rounded-[24px] border border-gray-200">
+                <h1 className="text-2xl font-black text-gray-900 mb-2">Skill not found</h1>
+                <p className="text-gray-500 mb-6">The skill you are looking for does not exist or has been removed.</p>
+                <Link href="/skills" className="px-6 py-2 bg-black text-white rounded-full font-bold hover:bg-gray-800 transition-colors inline-block">
                     Back to Skills
                 </Link>
             </div>
@@ -73,184 +74,227 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
     };
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8">
-            <Link href="/skills" className="inline-flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Skills
+        <div className="max-w-5xl mx-auto space-y-8 pb-12">
+            <Link href="/skills" className="inline-flex items-center text-sm font-bold text-gray-500 hover:text-black transition-colors group">
+                <ArrowLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" /> Back to Skills
             </Link>
 
             {/* Header */}
-            <div className="bg-white dark:bg-black border-2 border-black dark:border-white rounded-2xl p-8 shadow-sm dark:shadow-none">
-                <div className="flex items-start justify-between">
-                    <div>
-                        <div className="flex items-center gap-3 mb-4">
-                            <span className="px-3 py-1 text-sm font-semibold text-blue-600 bg-blue-50 rounded-full">
-                                {skill.category?.name || "Uncategorized"}
-                            </span>
+            <div className="bg-white border border-gray-100 rounded-2xl p-8 md:p-10 shadow-sm relative overflow-hidden">
+                <div className="relative z-10 flex flex-col md:flex-row items-start justify-between gap-6">
+                    <div className="space-y-4 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                            {skill.category ? (
+                                <span className="px-3 py-1 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-full uppercase tracking-wide">
+                                    {skill.category.name}
+                                </span>
+                            ) : (
+                                <span className="px-3 py-1 text-xs font-bold text-gray-500 bg-gray-100 border border-gray-200 rounded-full uppercase tracking-wide">
+                                    Uncategorized
+                                </span>
+                            )}
                             {skill.is_official && (
-                                <span className="px-3 py-1 text-sm font-semibold text-green-600 bg-green-50 rounded-full">
-                                    Official
+                                <span className="px-3 py-1 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-full uppercase tracking-wide flex items-center gap-1">
+                                    <Shield className="w-3 h-3" /> Official
                                 </span>
                             )}
                         </div>
-                        <h1 className="text-3xl font-black text-black dark:text-white mb-2">{skill.name}</h1>
-                        <p className="text-gray-600 dark:text-gray-300 text-lg font-medium">{skill.description}</p>
+
+                        <div>
+                            <h1 className="text-xl font-bold text-gray-900 tracking-tight mb-2">
+                                {skill.name}
+                            </h1>
+                            <p className="text-sm text-gray-500 leading-relaxed max-w-2xl">
+                                {skill.description || skill.summary}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex-shrink-0">
+                        <SkillHeaderEngagement
+                            skillId={skill.id}
+                            skillName={skill.name}
+                            initialStars={skill.stars}
+                            initialViews={skill.views}
+                            installUrl={installUrl}
+                        />
                     </div>
                 </div>
-                <SkillHeaderEngagement
-                    skillId={skill.id}
-                    skillName={skill.name}
-                    initialStars={skill.stars}
-                    initialViews={skill.views}
-                    installUrl={installUrl}
-                />
             </div>
 
-            {/* Content */}
+            {/* Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Main Content */}
-                <div className="lg:col-span-2 space-y-8">
-                    <section className="bg-white dark:bg-black border-2 border-black dark:border-white rounded-xl p-6">
-                        <h2 className="text-xl font-black text-black dark:text-white mb-4 uppercase">Overview</h2>
-                        <div className="prose prose-blue dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 font-medium">
+                {/* Main Content Column */}
+                <div className="lg:col-span-2 space-y-6">
+                    {/* Overview */}
+                    <section className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                        <div className="flex items-center gap-2 mb-4 text-gray-900">
+                            <FileText className="w-4 h-4 opacity-70" />
+                            <h2 className="text-base font-bold tracking-tight">Overview</h2>
+                        </div>
+                        <div className="prose prose-sm prose-gray max-w-none text-gray-600 leading-relaxed prose-headings:font-bold prose-headings:text-gray-900 prose-a:text-blue-600 prose-a:font-bold hover:prose-a:text-blue-800 prose-code:text-pink-600 prose-code:bg-pink-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-pre:bg-gray-900 prose-pre:text-gray-50 prose-img:rounded-xl">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {skill.overview || skill.content || skill.summary || skill.description || "No detailed description available."}
+                                {skill.overview || skill.content || "No detailed overview available."}
                             </ReactMarkdown>
                         </div>
                     </section>
 
+                    {/* Interface */}
                     {(skillInterface.inputs || skillInterface.outputs) && (
-                        <section className="bg-white dark:bg-black border-2 border-black dark:border-white rounded-xl p-6">
-                            <h2 className="text-xl font-black text-black dark:text-white mb-4 uppercase">Interface</h2>
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div>
-                                    <h3 className="font-bold text-black dark:text-white mb-2">Inputs</h3>
-                                    <pre className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg text-sm overflow-x-auto border-2 border-black dark:border-white text-black dark:text-white shadow-sm dark:shadow-none">
-                                        {JSON.stringify(skillInterface.inputs || {}, null, 2)}
-                                    </pre>
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-black dark:text-white mb-2">Outputs</h3>
-                                    <pre className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg text-sm overflow-x-auto border-2 border-black dark:border-white text-black dark:text-white shadow-sm dark:shadow-none">
-                                        {JSON.stringify(skillInterface.outputs || {}, null, 2)}
-                                    </pre>
-                                </div>
+                        <section className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                            <div className="flex items-center gap-2 mb-4 text-gray-900">
+                                <Code className="w-4 h-4 opacity-70" />
+                                <h2 className="text-base font-bold tracking-tight">Interface</h2>
+                            </div>
+
+                            <div className="grid gap-4">
+                                {skillInterface.inputs && (
+                                    <div className="space-y-2">
+                                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Inputs</h3>
+                                        <div className="bg-[#1e1e1e] p-4 rounded-xl shadow-inner border border-gray-800 overflow-hidden">
+                                            <pre className="text-xs text-gray-300 overflow-x-auto font-mono custom-scrollbar">
+                                                {JSON.stringify(skillInterface.inputs, null, 2)}
+                                            </pre>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {skillInterface.outputs && (
+                                    <div className="space-y-2">
+                                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Outputs</h3>
+                                        <div className="bg-[#1e1e1e] p-4 rounded-xl shadow-inner border border-gray-800 overflow-hidden">
+                                            <pre className="text-xs text-gray-300 overflow-x-auto font-mono custom-scrollbar">
+                                                {JSON.stringify(skillInterface.outputs, null, 2)}
+                                            </pre>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </section>
                     )}
 
-                    {/* Usage Guide */}
-                    <section className="bg-white dark:bg-black border-2 border-black dark:border-white rounded-xl p-6">
-                        <h2 className="text-xl font-black text-black dark:text-white mb-4 uppercase">How to Use</h2>
-                        <div className="prose prose-blue dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 font-medium">
+                    {/* Installation / Usage */}
+                    <section className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                        <div className="flex items-center gap-2 mb-4 text-gray-900">
+                            <Layers className="w-4 h-4 opacity-70" />
+                            <h2 className="text-base font-bold tracking-tight">Integration</h2>
+                        </div>
+
+                        <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-6">
                             {installUrl ? (
-                                <div>
-                                    <p className="mb-4">
-                                        This skill is hosted externally. To use or install <strong>{skill.name}</strong>, please follow the instructions in the official repository.
+                                <div className="space-y-4">
+                                    <p className="text-gray-700 font-medium">
+                                        To integrate this skill into your agent, refer to the official documentation or source repository.
                                     </p>
                                     <a
                                         href={installUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline font-bold"
+                                        className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-full font-bold shadow-md hover:bg-blue-700 hover:shadow-lg transition-all"
                                     >
-                                        View Installation Guide <ExternalLink className="w-4 h-4 ml-1" />
+                                        <ExternalLink className="w-4 h-4" />
+                                        View Documentation
                                     </a>
                                 </div>
                             ) : (
-                                <p>No usage instructions available for this skill.</p>
+                                <p className="text-gray-500 italic">No direct integration link provided.</p>
                             )}
                         </div>
                     </section>
                 </div>
 
-                {/* Sidebar */}
+                {/* Sidebar Column */}
                 <div className="space-y-6">
-                    <section className="bg-white dark:bg-black border-2 border-black dark:border-white rounded-xl p-6 shadow-sm dark:shadow-none">
-                        <h2 className="font-black text-black dark:text-white mb-4 uppercase">Details</h2>
-                        <div className="space-y-3 text-sm font-bold">
-                            <div className="flex justify-between py-2 border-b-2 border-black dark:border-white/20">
-                                <span className="text-gray-500 dark:text-gray-400">Author</span>
-                                <span className="text-black dark:text-white">{skill.author || "Unknown"}</span>
+                    {/* Metadata Card */}
+                    <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                        <div className="flex items-center gap-2 mb-6 text-gray-900 border-b border-gray-100 pb-4">
+                            <Box className="w-5 h-5 opacity-70" />
+                            <h3 className="font-bold text-lg">Details</h3>
+                        </div>
+
+                        <div className="space-y-5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                                    <User className="w-4 h-4" /> Author
+                                </span>
+                                <span className="text-sm font-bold text-gray-900 text-right truncate max-w-[120px]">
+                                    {skill.author || "Community"}
+                                </span>
                             </div>
-                            <div className="flex justify-between py-2 border-b-2 border-black dark:border-white/20">
-                                <span className="text-gray-500 dark:text-gray-400">Version</span>
-                                <span className="text-black dark:text-white">1.0.0</span>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                                    <Shield className="w-4 h-4" /> License
+                                </span>
+                                <span className="text-sm font-bold text-gray-900">MIT</span>
                             </div>
-                            <div className="flex justify-between py-2 border-b-2 border-black dark:border-white/20">
-                                <span className="text-gray-500 dark:text-gray-400">License</span>
-                                <span className="text-black dark:text-white">MIT</span>
-                            </div>
-                            <div className="flex justify-between py-2">
-                                <span className="text-gray-500 dark:text-gray-400">Updated</span>
-                                <span className="text-black dark:text-white">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                                    <Calendar className="w-4 h-4" /> Updated
+                                </span>
+                                <span className="text-sm font-bold text-gray-900">
                                     {new Date(skill.updated_at).toLocaleDateString()}
                                 </span>
                             </div>
-                        </div>
-                    </section>
+                            <div className="pt-4 mt-2 border-t border-gray-100">
+                                <div className="flex flex-col gap-3">
+                                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Source Links</h4>
+                                    {(() => {
+                                        const links = skill.source_links?.map(l => ({ type: l.link_type, url: l.url || l.external_id }))
+                                            .filter(l => l.url) || [];
 
-                    <section className="bg-white border border-gray-200 rounded-xl p-6">
-                        <h2 className="font-bold text-gray-900 mb-4">Tags</h2>
+                                        if (links.length === 0 && installUrl) {
+                                            links.push({ type: "Repository", url: installUrl });
+                                        }
+
+                                        if (links.length === 0) return <span className="text-xs text-gray-400">None available</span>;
+
+                                        return links.map((link, i) => (
+                                            <a
+                                                key={i}
+                                                href={link.url!}
+                                                target="_blank"
+                                                rel="noopener"
+                                                className="flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-blue-600 transition-colors"
+                                            >
+                                                <Globe className="w-3.5 h-3.5" />
+                                                {link.type}
+                                            </a>
+                                        ));
+                                    })()}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Tags Card */}
+                    <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                        <div className="flex items-center gap-2 mb-4 text-gray-900">
+                            <Tag className="w-5 h-5 opacity-70" />
+                            <h3 className="font-bold text-lg">Tags</h3>
+                        </div>
                         <div className="flex flex-wrap gap-2">
-                            {(() => {
-                                const tags = (skill.tags && skill.tags.length > 0) ? skill.tags : [];
-                                if (tags.length > 0) {
-                                    return tags.map((tag) => (
-                                        <span key={tag.slug} className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-md">
-                                            {tag.name}
-                                        </span>
-                                    ));
-                                }
-
-                                // Fallback: many sources do not publish tags in SKILL.md; show category as a tag.
-                                const categoryName = (skill.category?.name || "").trim();
-                                if (!categoryName) {
-                                    return <span className="text-gray-400 text-sm">No tags</span>;
-                                }
-                                const categorySlug = (skill.category?.slug || "")
-                                    || `category-${categoryName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}`;
-                                return (
-                                    <span key={categorySlug} className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-md">
-                                        {categoryName}
-                                    </span>
-                                );
-                            })()}
-                        </div>
-                    </section>
-
-                    <section className="bg-white border border-gray-200 rounded-xl p-6">
-                        <h2 className="font-bold text-gray-900 mb-4">Source</h2>
-                        {(() => {
-                            const links: Array<{ link_type: string; url: string }> = [];
-                            for (const l of skill.source_links || []) {
-                                const url = (l.url || l.external_id || "").trim();
-                                if (!url) continue;
-                                links.push({ link_type: l.link_type, url });
-                            }
-
-                            // Fallback: many skills don't have normalized SkillSourceLink rows yet.
-                            if (links.length === 0 && installUrl) {
-                                links.push({ link_type: "definition", url: installUrl });
-                            }
-
-                            if (links.length === 0) {
-                                return <span className="text-gray-400 text-sm">No source links</span>;
-                            }
-
-                            return links.map((link) => (
-                                <a
-                                    key={`${link.link_type}-${link.url}`}
-                                    href={link.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 text-sm text-blue-600 hover:underline mb-2"
+                            {skill.category && (
+                                <Link
+                                    href={`/skills?category=${skill.category.slug}`}
+                                    className="px-3 py-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-black rounded-lg text-xs font-bold transition-all"
                                 >
-                                    <ExternalLink className="w-4 h-4" />
-                                    {link.link_type}
-                                </a>
-                            ));
-                        })()}
-                    </section>
+                                    #{skill.category.name}
+                                </Link>
+                            )}
+                            {skill.tags?.map((tag) => (
+                                <Link
+                                    key={tag.slug}
+                                    href={`/skills?q=${tag.name}`}
+                                    className="px-3 py-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-black rounded-lg text-xs font-bold transition-all"
+                                >
+                                    #{tag.name}
+                                </Link>
+                            ))}
+                            {(!skill.tags || skill.tags.length === 0) && !skill.category && (
+                                <span className="text-sm text-gray-400 italic">No tags</span>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

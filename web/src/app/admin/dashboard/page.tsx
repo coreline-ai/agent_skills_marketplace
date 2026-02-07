@@ -143,20 +143,20 @@ export default function AdminDashboardPage() {
     return (
         <div className="space-y-8">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+                <h1 className="text-2xl font-bold text-gray-900">대시보드 개요</h1>
                 <div className="flex items-center gap-3">
                     {lastUpdatedAt && (
                         <span className="text-xs text-gray-500">
-                            Updated: {lastUpdatedAt.toLocaleTimeString()}
+                            업데이트: {lastUpdatedAt.toLocaleTimeString()}
                         </span>
                     )}
                     <button
                         onClick={handleSync}
                         disabled={isSyncing}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors text-sm font-medium"
                     >
                         <RefreshCw className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
-                        {isSyncing ? "Syncing..." : "Sync Sources"}
+                        {isSyncing ? "동기화 중..." : "소스 동기화"}
                     </button>
                 </div>
             </div>
@@ -164,49 +164,49 @@ export default function AdminDashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-gray-500 font-medium">Total Skills</h3>
+                        <h3 className="text-gray-500 font-medium">전체 스킬</h3>
                         <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
                             <CheckCircle className="w-5 h-5" />
                         </div>
                     </div>
                     <p className="text-3xl font-bold text-gray-900">{totalSkills}</p>
                     <p className="text-sm text-green-600 mt-2 flex items-center gap-1">
-                        <ArrowUpRight className="w-4 h-4" /> Synced from catalog
+                        <ArrowUpRight className="w-4 h-4" /> 카탈로그 동기화됨
                     </p>
                 </div>
 
                 <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-gray-500 font-medium">Pending Review</h3>
+                        <h3 className="text-gray-500 font-medium">검토 대기</h3>
                         <div className="p-2 bg-yellow-50 text-yellow-600 rounded-lg">
                             <Clock className="w-5 h-5" />
                         </div>
                     </div>
                     <p className="text-3xl font-bold text-gray-900">{pendingCount}</p>
                     <p className="text-sm text-gray-500 mt-2">
-                        Needs attention
+                        검토 필요 항목
                     </p>
                     <div className="mt-4">
-                        <Link href="/admin/skills?status=pending" className="text-sm text-blue-600 hover:underline">
-                            View all pending
+                        <Link href="/admin/skills?status=pending" className="block w-full text-center px-4 py-2 bg-gray-50 text-gray-900 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium">
+                            대기 목록 보기
                         </Link>
                     </div>
                 </div>
 
                 <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-gray-500 font-medium">Flagged Issues</h3>
+                        <h3 className="text-gray-500 font-medium">문제 신고</h3>
                         <div className="p-2 bg-red-50 text-red-600 rounded-lg">
                             <AlertCircle className="w-5 h-5" />
                         </div>
                     </div>
                     <p className="text-3xl font-bold text-gray-900">{flaggedCount}</p>
                     <p className="text-sm text-gray-500 mt-2">
-                        Quality alerts
+                        품질 알림
                     </p>
                     <div className="mt-4">
-                        <Link href="/admin/quality" className="text-sm text-blue-600 hover:underline">
-                            Review issues
+                        <Link href="/admin/quality" className="block w-full text-center px-4 py-2 bg-gray-50 text-gray-900 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium">
+                            문제 검토
                         </Link>
                     </div>
                 </div>
@@ -215,11 +215,11 @@ export default function AdminDashboardPage() {
             {/* Recent Activity Section */}
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="font-bold text-gray-900">Recent Raw Skills Ingested</h3>
+                    <h3 className="font-bold text-gray-900">최근 수집된 Raw Skills</h3>
                 </div>
                 <div className="p-0">
                     {loading ? (
-                        <div className="p-6 text-center text-gray-500">Loading recent activity...</div>
+                        <div className="p-6 text-center text-gray-500">최근 활동 불러오는 중...</div>
                     ) : recentActivity.length > 0 ? (
                         <ul className="divide-y divide-gray-100">
                             {recentActivity.map((item) => (
@@ -229,35 +229,46 @@ export default function AdminDashboardPage() {
                                         <p className="text-xs text-gray-500 mt-1 capitalize">{item.status}</p>
                                     </div>
                                     <Link href={`/admin/skills?focus=${item.id}`} className="text-sm font-medium text-blue-600 hover:text-blue-500">
-                                        Review
+                                        검토하기
                                     </Link>
                                 </li>
                             ))}
                         </ul>
                     ) : (
-                        <div className="p-6 text-center text-gray-500">No recent activity.</div>
+                        <div className="p-6 text-center text-gray-500">최근 활동이 없습니다.</div>
                     )}
                 </div>
             </div>
 
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                    <h3 className="font-bold text-gray-900">Crawl Sources</h3>
-                    <span className="text-xs text-gray-500">{crawlSources.length} sources</span>
+                    <h3 className="font-bold text-gray-900">크롤링 소스</h3>
+                    <span className="text-xs text-gray-500">{crawlSources.length}개 소스</span>
                 </div>
                 <div className="p-0">
                     {loading ? (
-                        <div className="p-6 text-center text-gray-500">Loading sources...</div>
+                        <div className="p-6 text-center text-gray-500">소스 불러오는 중...</div>
                     ) : crawlSources.length > 0 ? (
                         <ul className="divide-y divide-gray-100">
                             {crawlSources.map((source) => (
                                 <li key={source.id} className="px-6 py-4 hover:bg-gray-50">
-                                    <div className="flex items-center justify-between gap-4">
-                                        <div className="min-w-0 flex items-center gap-2 flex-wrap">
-                                            <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-gray-100 text-gray-700 text-xs font-mono">
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm font-medium text-gray-900 truncate">
                                                 {source.repo_full_name ?? source.url.replace(/^https?:\/\//, "")}
                                             </span>
-                                            <span className="inline-flex items-center px-2 py-1 rounded bg-blue-50 text-blue-700 text-[11px] font-medium">
+                                            <a
+                                                href={source.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                title={source.url}
+                                                className="text-gray-400 hover:text-blue-600 transition-colors"
+                                            >
+                                                <ExternalLink className="w-4 h-4" />
+                                            </a>
+                                        </div>
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[11px] font-medium">
                                                 {source.source_type}
                                             </span>
                                             <span className="text-[11px] text-gray-500 whitespace-nowrap">
@@ -274,16 +285,6 @@ export default function AdminDashboardPage() {
                                                 </span>
                                             )}
                                         </div>
-                                        <a
-                                            href={source.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            title={source.url}
-                                            className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:underline whitespace-nowrap"
-                                        >
-                                            {source.repo_full_name ? `github.com/${source.repo_full_name}` : source.url}
-                                            <ExternalLink className="w-4 h-4" />
-                                        </a>
                                     </div>
                                 </li>
                             ))}

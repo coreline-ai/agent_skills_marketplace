@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Star, Eye, ArrowUpRight } from "lucide-react";
+import { Star, Eye, ChevronRight } from "lucide-react";
 
 interface SkillCardProps {
     id: string;
@@ -16,45 +16,57 @@ interface SkillCardProps {
 
 export function SkillCard({ id, name, slug, description, summary, category, views, stars, rank }: SkillCardProps) {
     const blurb = (summary && summary.trim()) ? summary : description;
+
+    // Category tag style mapping based on code.html design
+    const getCategoryStyle = (cat: string) => {
+        const c = cat.toUpperCase();
+        if (c === 'DATA') return 'bg-orange-50 text-orange-600 border-orange-100';
+        if (c === 'CODING') return 'bg-blue-50 text-blue-600 border-blue-100';
+        if (c === 'RESEARCH') return 'bg-indigo-50 text-indigo-600 border-indigo-100';
+        if (c === 'TOOLS') return 'bg-teal-50 text-teal-600 border-teal-100';
+        return 'bg-gray-50 text-gray-600 border-gray-100';
+    };
+
     return (
-        <Link href={`/skills/${id}`} className="block group h-full" aria-label={`${name} (${slug})`}>
-            <div className="h-full bg-background text-foreground rounded-lg border-2 border-main p-6 neo-shadow neo-shadow-hover relative overflow-hidden flex flex-col transition-all">
+        <Link href={`/skills/${id}`} className="block h-full" aria-label={`${name} (${slug})`}>
+            <article className="bg-white border border-gray-100 rounded-xl p-6 shadow-soft hover:shadow-hover hover:-translate-y-1 hover:bg-gray-50 transition-all duration-300 flex flex-col h-full group relative overflow-hidden">
+                {/* Rank Badge - kept for ranking context, styled cleanly */}
                 {rank && (
-                    <div className="absolute top-0 right-0 bg-accent text-black border-l-2 border-b-2 border-main px-4 py-2 font-black text-lg z-10">
+                    <div className="absolute top-0 right-0 bg-gray-900 text-white px-3 py-1 text-xs font-bold rounded-bl-xl shadow-sm z-10">
                         #{rank}
                     </div>
                 )}
 
-                <div className="mb-4 pt-2">
-                    <span className="inline-block px-3 py-1 text-xs font-bold uppercase tracking-wider bg-invert mb-3 border border-main">
-                        {category}
+                <div className="flex justify-between items-start mb-4">
+                    <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider border ${getCategoryStyle(category)}`}>
+                        {category.toUpperCase()}
                     </span>
-                    <h3 className="text-2xl font-extrabold group-hover:underline decoration-2 decoration-accent underline-offset-4 line-clamp-2">
-                        {name}
-                    </h3>
                 </div>
 
-                <p className="text-foreground/80 text-sm font-medium mb-6 line-clamp-3 leading-relaxed flex-grow">
+                <h3 className="text-gray-900 font-bold mb-2 group-hover:text-gray-600 transition-colors text-lg line-clamp-2">
+                    {name}
+                </h3>
+
+                <p className="text-sm mb-6 flex-1 line-clamp-2 text-gray-500 leading-relaxed">
                     {blurb}
                 </p>
 
-                <div className="flex items-center justify-between text-sm font-bold pt-4 border-t-2 border-main mt-auto">
+                <div className="flex items-center justify-between border-t border-gray-100 pt-4 text-xs text-gray-400 mt-auto">
                     <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1.5">
-                            <Star className="w-5 h-5 fill-current" />
-                            <span>{stars}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <Eye className="w-5 h-5" />
-                            <span>{views}</span>
-                        </div>
+                        <span className="flex items-center gap-1.5 hover:text-gray-600 transition-colors">
+                            <Star className="w-3.5 h-3.5" />
+                            <span className="font-medium">{stars}</span>
+                        </span>
+                        <span className="flex items-center gap-1.5 hover:text-gray-600 transition-colors">
+                            <Eye className="w-3.5 h-3.5" />
+                            <span className="font-medium">{views}</span>
+                        </span>
                     </div>
-                    <div className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                        <span>Details</span>
-                        <ArrowUpRight className="w-4 h-4" />
+                    <div className="text-xs font-bold text-gray-900 flex items-center gap-1 hover:text-accent tracking-wider transition-colors">
+                        DETAILS <ChevronRight className="w-2.5 h-2.5" />
                     </div>
                 </div>
-            </div>
+            </article>
         </Link>
     );
 }

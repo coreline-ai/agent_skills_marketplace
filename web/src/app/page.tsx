@@ -39,56 +39,60 @@ export default async function Home() {
   }));
 
   return (
-    <div className="space-y-20">
-      <section className="relative py-20 px-4 text-center neo-container !shadow-none rounded-xl overflow-hidden">
-        <div className="absolute inset-0 bg-grid opacity-20 pointer-events-none"></div>
-        <div className="relative z-10 space-y-8 max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-invert rounded-full font-bold text-sm border-2 border-main">
-            <Sparkles className="w-4 h-4 text-accent dark:text-background" />
-            <span>The Marketplace for AI Minds</span>
+    <div className="space-y-12">
+      <section className="relative rounded-[20px] hero-border overflow-hidden mb-12 bg-gray-50/50" data-purpose="hero-banner">
+        <div className="absolute inset-0 dot-pattern pointer-events-none"></div>
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between p-8 md:p-12 gap-8">
+          <div className="flex-1 space-y-6 max-w-2xl">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] bg-white text-gray-700 text-[10px] font-bold tracking-[1px] uppercase border border-gray-200 shadow-sm">
+              <Sparkles className="w-3 h-3 text-accent" />
+              THE MARKETPLACE FOR AI MINDS
+            </span>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+              Unlock Your AI's <br /> Agent <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-500">Skills</span>
+            </h1>
+            <p className="text-gray-600 text-lg leading-relaxed max-w-lg">
+              Discover, integrate, and deploy high-quality skills. Community-driven, verified, and ready to run.
+            </p>
+            <div className="flex flex-wrap gap-4 pt-2">
+              <Link href="/skills" className="px-6 py-3 bg-gray-900 text-white border border-gray-900 font-medium rounded-full hover:bg-gray-800 hover:shadow-lg transition-all text-sm mr-2">
+                Browse Skills Library
+              </Link>
+              <Link href="/rankings" className="px-6 py-3 border border-gray-300 bg-white text-gray-700 font-medium rounded-full hover:border-gray-400 hover:bg-gray-50 transition-colors text-sm">
+                View Leaderboard
+              </Link>
+            </div>
           </div>
-
-          <h1 className="text-5xl sm:text-7xl font-black text-foreground tracking-tight leading-tight uppercase">
-            Supercharge Your <br />
-            <span className="bg-accent px-2 decoration-slice text-black">AI Agents</span>
-          </h1>
-
-          <p className="text-xl sm:text-2xl text-foreground/80 font-medium max-w-2xl mx-auto leading-relaxed">
-            Discover, integrate, and deploy high-quality skills. <br className="hidden sm:block" />
-            Community-driven, verified, and ready to run.
-          </p>
-
-          <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/skills" className="px-8 py-4 bg-invert text-lg font-bold border-2 border-main rounded-lg !shadow-none hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_var(--foreground)] transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
-              Browse Skills library
-            </Link>
-            <Link href="/rankings" className="px-8 py-4 bg-background text-foreground text-lg font-bold border-2 border-main rounded-lg hover:bg-accent hover:text-black hover:translate-x-[1px] hover:translate-y-[1px] transition-all">
-              View Leaderboard
-            </Link>
+          <div className="w-full max-w-[320px] md:max-w-[400px] flex-shrink-0 relative">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-blue-100/60 blur-[60px] rounded-full pointer-events-none"></div>
+            <img
+              alt="AI Robot Illustration"
+              className="w-full h-auto object-contain relative z-10 drop-shadow-xl filter saturate-[0.8]"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsp3nkRcPjUJSXxoHaBpp1Ar0Gi4PJMCZn-xJzzE6ahZ78wZb8_T6cgfpTzkBBeKTlHKw2APV-Wz0aD670qH3nSmxS4-YdI_5wmTGh54kksTQtgW2JuWW9MOymqmbj8KhqjwukaloUS7DoI1vB5-JfnGXR_ZigCSMgIwkleL734fQWFtC8bzlCBK1jVsobtqs6_e0-WKj7o7hUnbEuWkayND8rD5J5h10nDa0cVKfT__-DUJIRHhKgPdLqunSo4QOeU8aMei5Z-H8"
+            />
           </div>
         </div>
       </section>
 
-      {/* Top 10 Section */}
-      <section className="space-y-8">
-        <div className="flex items-center justify-between border-b-4 border-main pb-4">
-          <h2 className="text-3xl font-black text-foreground uppercase tracking-wide">
-            Top Trending Skills
-          </h2>
-          <Link href="/rankings" className="group font-bold text-lg flex items-center gap-2 hover:underline decoration-2 underline-offset-4 decoration-accent">
-            See All <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+      <section data-purpose="trending-skills">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-900">Trending Skills</h2>
+          <Link href="/skills" className="text-[0.9rem] text-gray-500 hover:text-accent transition-colors flex items-center gap-1 group">
+            See All
+            <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
 
         {displaySkills.length === 0 ? (
-          <div className="text-center py-20 bg-gray-50 border-2 border-dashed border-black rounded-lg">
-            <p className="text-xl font-bold text-gray-500">No rankings available yet. Be the first to add a skill!</p>
+          <div className="text-center py-20 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl">
+            <p className="text-lg font-medium text-gray-500">No rankings available yet.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {displaySkills.map((skill) => (
-              <SkillCard key={skill.skill_id} {...skill} />
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {displaySkills.map((skill, index) => {
+              const { rank: _, ...rest } = skill;
+              return <SkillCard key={skill.skill_id} rank={index + 1} {...rest} />;
+            })}
           </div>
         )}
       </section>

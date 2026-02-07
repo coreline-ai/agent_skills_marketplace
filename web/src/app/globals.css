@@ -3,30 +3,43 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #000000;
-  --accent: #FFD600;
-  --shadow-color: rgba(0, 0, 0, 1);
+  --background: #FFFFFF;
+  --foreground: #1f2937;
+  --sidebar: #F8F9FA;
+  --border: #e5e7eb;
+  --accent: #6366f1;
+  --accent-dark: #4f46e5;
+  --text-muted: #6b7280;
+  --card: #FFFFFF;
 }
 
 .dark {
-  --background: #000000;
-  --foreground: #ffffff;
-  --shadow-color: rgba(255, 255, 255, 0);
-  /* No shadows in dark mode */
+  --background: #111827;
+  --foreground: #f9fafb;
+  --sidebar: #1f2937;
+  --border: #374151;
+  --accent: #818cf8;
+  --accent-dark: #6366f1;
+  --text-muted: #9ca3af;
+  --card: #1f2937;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-sidebar: var(--sidebar);
+  --color-border: var(--border);
   --color-accent: var(--accent);
+  --color-accent-dark: var(--accent-dark);
+  --color-text-muted: var(--text-muted);
+  --color-card: var(--card);
 }
 
 @layer base {
   body {
     background-color: var(--background);
     color: var(--foreground);
-    @apply antialiased selection:bg-accent selection:text-black;
+    @apply antialiased selection:bg-accent selection:text-white;
     transition: background-color 0.2s, color 0.2s;
   }
 
@@ -51,67 +64,37 @@
 
 @layer utilities {
 
-  /* Bulletproof Inversion Utility */
-  .bg-invert {
-    background-color: var(--foreground) !important;
-    color: var(--background) !important;
+  .shadow-soft {
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
   }
 
-  /* High-Specificity Theme Safety Overrides */
-  .dark .bg-invert,
-  .dark .bg-white,
-  .dark .bg-accent,
-  .dark .text-black,
-  .dark [class*="bg-invert"] {
-    color: #000000 !important;
+  .shadow-hover {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
   }
 
-  .border-main {
-    border-color: var(--foreground) !important;
+  /* Dot Grid Pattern */
+  .dot-pattern {
+    background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.6;
   }
 
-  .border-invert {
-    border-color: var(--background) !important;
+  .dark .dot-pattern {
+    background-image: radial-gradient(#4b5563 1px, transparent 1px);
   }
 
-  /* Dynamic Neo-Shadow */
-  .neo-shadow {
-    box-shadow: 6px 6px 0px 0px var(--shadow-color);
+  .hero-border {
+    border: 1px solid var(--border);
   }
 
-  .neo-shadow-sm {
-    box-shadow: 3px 3px 0px 0px var(--shadow-color);
-  }
-
-  .neo-shadow-hover {
-    @apply transition-all duration-200;
-  }
-
-  :root:not(.dark) .neo-shadow-hover:hover {
-    box-shadow: 2px 2px 0px 0px var(--shadow-color);
-    transform: translate(2px, 2px);
-  }
-
-  /* Dot Grid */
-  .bg-grid {
-    background-size: 40px 40px;
-    background-image: radial-gradient(circle, #e5e7eb 1px, transparent 1px);
-  }
-
-  .dark .bg-grid {
-    background-image: radial-gradient(circle, #333 1px, transparent 1px);
+  /* Center search icon vertically */
+  .search-icon-pos {
+    top: 50%;
+    transform: translateY(-50%);
   }
 }
 
 @layer components {
-
-  /* Theme-Aware Container */
-  .neo-container {
-    background-color: var(--background);
-    color: var(--foreground);
-    border: 2px solid var(--foreground);
-  }
-
   .container-responsive {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }

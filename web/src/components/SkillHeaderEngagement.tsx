@@ -119,16 +119,16 @@ export function SkillHeaderEngagement({
                         type="button"
                         onClick={onFavorite}
                         title={favorited ? "Favorited" : "Add favorite"}
-                        className={`p-3 border-2 border-main rounded-lg transition-all neo-shadow neo-shadow-hover active:translate-x-[4px] active:translate-y-[4px] active:shadow-none ${favorited ? "bg-accent text-black" : "bg-background text-foreground hover:bg-accent hover:text-black"
+                        className={`p-3 border border-border rounded-xl transition-all shadow-soft overflow-hidden hover:shadow-hover ${favorited ? "bg-black text-white" : "bg-background text-foreground hover:bg-sidebar"
                             }`}
                     >
-                        <Star className={`w-5 h-5 ${favorited ? "fill-black" : ""}`} />
+                        <Star className={`w-5 h-5 ${favorited ? "fill-current" : ""}`} />
                     </button>
                     <button
                         type="button"
                         onClick={onShare}
                         title={shared ? "Copied" : "Share"}
-                        className={`p-3 border-2 border-main rounded-lg transition-all neo-shadow neo-shadow-hover active:translate-x-[4px] active:translate-y-[4px] active:shadow-none ${shared ? "bg-green-500 text-white" : "bg-background text-foreground hover:bg-accent hover:text-black"
+                        className={`p-3 border border-border rounded-xl transition-all shadow-soft overflow-hidden hover:shadow-hover ${shared ? "bg-green-500 text-white" : "bg-background text-foreground hover:bg-sidebar"
                             }`}
                     >
                         <Share2 className="w-5 h-5" />
@@ -136,14 +136,14 @@ export function SkillHeaderEngagement({
                 </div>
             </div>
 
-            <div className="mt-8 flex flex-wrap items-center gap-6 pt-6 border-t-2 border-main">
-                <div className="flex items-center gap-2 font-bold">
-                    <Star className="w-6 h-6 fill-current" />
-                    <span className="text-xl">{stars}</span> stars
+            <div className="mt-8 flex flex-wrap items-center gap-6 pt-6 border-t border-border">
+                <div className="flex items-center gap-2 font-medium text-text-muted">
+                    <Star className="w-5 h-5" />
+                    <span className="text-xl font-bold text-foreground">{stars}</span> stars
                 </div>
-                <div className="flex items-center gap-2 font-bold">
-                    <Eye className="w-6 h-6" />
-                    <span className="text-xl">{views}</span> views
+                <div className="flex items-center gap-2 font-medium text-text-muted">
+                    <Eye className="w-5 h-5" />
+                    <span className="text-xl font-bold text-foreground">{views}</span> views
                 </div>
                 <div className="ml-auto">
                     {installUrl ? (
@@ -151,7 +151,7 @@ export function SkillHeaderEngagement({
                             href={installUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 bg-invert border-2 border-main px-6 py-3 rounded-lg font-bold text-lg neo-shadow neo-shadow-hover active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
+                            className="inline-flex items-center gap-2 bg-foreground text-background px-8 py-3 rounded-full font-bold text-lg shadow-soft hover:shadow-hover hover:-translate-y-0.5 transition-all"
                         >
                             <Download className="w-5 h-5" /> Open Source
                         </a>
@@ -159,7 +159,7 @@ export function SkillHeaderEngagement({
                         <button
                             type="button"
                             disabled
-                            className="inline-flex items-center gap-2 bg-foreground/10 text-foreground/50 border-2 border-dashed border-main px-6 py-3 rounded-lg font-bold text-lg cursor-not-allowed opacity-70"
+                            className="inline-flex items-center gap-2 bg-sidebar text-text-muted border border-dashed border-border px-8 py-3 rounded-full font-bold text-lg cursor-not-allowed"
                         >
                             <Download className="w-5 h-5" /> No Source URL
                         </button>

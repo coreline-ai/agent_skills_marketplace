@@ -5,48 +5,68 @@ export const metadata = {
 
 export default function GuidePage() {
   return (
-    <div className="space-y-10">
-      <header className="space-y-3 border-b-4 border-black pb-6">
-        <h1 className="text-4xl sm:text-5xl font-black tracking-tight">Guide</h1>
-        <p className="text-black/80 dark:text-white/80 font-medium max-w-3xl">
+    <div className="space-y-8 pb-20 max-w-4xl">
+      <header className="space-y-4 border-b border-gray-100 pb-8">
+        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">User Guide</h1>
+        <p className="text-base text-gray-600 max-w-2xl leading-relaxed font-medium">
           This marketplace is intentionally strict: we only index repositories that publish Skills as canonical{" "}
-          <span className="font-black">SKILL.md</span> files under <span className="font-mono">skills/*/SKILL.md</span>{" "}
-          or <span className="font-mono">.claude/skills/*/SKILL.md</span>. That is how we avoid “random OSS repos” and
+          <span className="font-bold text-gray-900">SKILL.md</span> files under <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-800 mx-1">skills/*/SKILL.md</span>{" "}
+          or <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-800 mx-1">.claude/skills/*/SKILL.md</span>. That is how we avoid “random OSS repos” and
           keep the catalog useful.
         </p>
       </header>
 
-      <section className="space-y-3">
-        <h2 className="text-2xl font-black">What Are Skills?</h2>
-        <p className="text-black/80 dark:text-white/80 font-medium leading-relaxed">
-          A Skill is a reusable, installable capability for an agent. In this project, a Skill is defined by a single
-          SKILL.md document (with YAML frontmatter + body) stored in a canonical folder layout.
-        </p>
-      </section>
+      <div className="grid gap-8">
+        <section className="bg-white p-8 rounded-[24px] border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-book-open"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
+            </div>
+            <div className="space-y-3 flex-1">
+              <h2 className="text-lg font-bold text-gray-900">What Are Skills?</h2>
+              <p className="text-base text-gray-600 leading-relaxed font-medium">
+                A Skill is a reusable, installable capability for an agent. In this project, a Skill is defined by a single
+                SKILL.md document (with YAML frontmatter + body) stored in a canonical folder layout.
+              </p>
+            </div>
+          </div>
+        </section>
 
-      <section className="space-y-3">
-        <h2 className="text-2xl font-black">Creating Skills</h2>
-        <p className="text-black/80 dark:text-white/80 font-medium leading-relaxed">
-          Create a public GitHub repository that is dedicated to Skills (recommended), then add one or more SKILL.md
-          files using one of the canonical layouts below.
-        </p>
-        <div className="bg-white dark:bg-black border-2 border-black p-4 rounded-lg neo-shadow">
-          <pre className="text-sm font-mono whitespace-pre-wrap">
-{`skills/my-skill/SKILL.md
+        <section className="bg-white p-8 rounded-[24px] border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-folder-plus"><path d="M12 10v6" /><path d="M9 13h6" /><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" /></svg>
+            </div>
+            <div className="space-y-4 flex-1">
+              <h2 className="text-lg font-bold text-gray-900">Creating Skills</h2>
+              <p className="text-base text-gray-600 leading-relaxed font-medium">
+                Create a public GitHub repository that is dedicated to Skills (recommended), then add one or more SKILL.md
+                files using one of the canonical layouts below.
+              </p>
+              <div className="bg-gray-50 border border-gray-200 p-5 rounded-xl overflow-x-auto">
+                <pre className="text-sm font-mono text-gray-800 whitespace-pre-wrap">
+                  {`skills/my-skill/SKILL.md
 .claude/skills/my-skill/SKILL.md`}
-          </pre>
-        </div>
-      </section>
+                </pre>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <section className="space-y-3">
-        <h2 className="text-2xl font-black">Writing SKILL.md</h2>
-        <p className="text-black/80 dark:text-white/80 font-medium leading-relaxed">
-          We parse YAML frontmatter and validate a small set of quality rules so broken or incomplete docs do not enter
-          the public catalog.
-        </p>
-        <div className="bg-white dark:bg-black border-2 border-black p-4 rounded-lg neo-shadow">
-          <pre className="text-sm font-mono whitespace-pre-wrap">
-{`---
+        <section className="bg-white p-8 rounded-[24px] border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-green-50 text-green-600 rounded-xl">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-file-text"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M10 9H8" /><path d="M16 13H8" /><path d="M16 17H8" /></svg>
+            </div>
+            <div className="space-y-4 flex-1">
+              <h2 className="text-lg font-bold text-gray-900">Writing SKILL.md</h2>
+              <p className="text-base text-gray-600 leading-relaxed font-medium">
+                We parse YAML frontmatter and validate a small set of quality rules so broken or incomplete docs do not enter
+                the public catalog.
+              </p>
+              <div className="bg-gray-50 border border-gray-200 p-5 rounded-xl overflow-x-auto">
+                <pre className="text-sm font-mono text-gray-800 whitespace-pre-wrap">
+                  {`---
 name: My Skill
 description: One-line description that explains what the skill does.
 category: Tools
@@ -54,45 +74,64 @@ category: Tools
 
 ## Overview
 Explain what it does, inputs/outputs, and how to use it.`}
-          </pre>
+                </pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="grid md:grid-cols-2 gap-8">
+          <section className="bg-white p-8 rounded-[24px] border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300">
+            <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sparkles text-yellow-500"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z" /></svg>
+              Advanced Features
+            </h2>
+            <p className="text-gray-600 leading-relaxed text-sm font-medium">
+              Add concrete examples, constraints, and triggers in a consistent format. The goal is to make Skills searchable,
+              comparable, and safe to reuse.
+            </p>
+          </section>
+
+          <section className="bg-white p-8 rounded-[24px] border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300">
+            <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-layers text-indigo-500"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" /><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65" /><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65" /></svg>
+              Collections (Planned)
+            </h2>
+            <p className="text-gray-600 leading-relaxed text-sm font-medium">
+              We plan to support “Collections” (curated sets of Skills) so teams can share a bundle that works well together.
+            </p>
+          </section>
         </div>
-      </section>
 
-      <section className="space-y-3">
-        <h2 className="text-2xl font-black">Advanced Features</h2>
-        <p className="text-black/80 dark:text-white/80 font-medium leading-relaxed">
-          Add concrete examples, constraints, and triggers in a consistent format. The goal is to make Skills searchable,
-          comparable, and safe to reuse.
-        </p>
-      </section>
+        <section className="bg-red-50/50 p-8 rounded-[24px] border border-red-100/50">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-white text-red-500 rounded-xl shadow-sm border border-red-100">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-alert-circle"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></svg>
+            </div>
+            <div className="space-y-4 flex-1">
+              <h2 className="text-lg font-bold text-gray-900">Troubleshooting</h2>
+              <p className="text-base text-gray-600 leading-relaxed font-medium">
+                If your Skill is not showing up, check these common issues:
+              </p>
+              <ul className="space-y-2">
+                <li className="flex items-center gap-3 text-sm text-gray-700 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                  <span>Not using the canonical path (<span className="font-mono text-gray-500 text-xs bg-white border border-gray-200 px-1 py-0.5 rounded">skills/*/SKILL.md</span>)</span>
+                </li>
+                <li className="flex items-center gap-3 text-sm text-gray-700 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                  <span>Broken or missing YAML frontmatter</span>
+                </li>
+                <li className="flex items-center gap-3 text-sm text-gray-700 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                  <span>Missing description field</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
 
-      <section className="space-y-3">
-        <h2 className="text-2xl font-black">Testing &amp; Debugging</h2>
-        <p className="text-black/80 dark:text-white/80 font-medium leading-relaxed">
-          If your Skill is not showing up, the most common reasons are:
-        </p>
-        <ul className="list-disc pl-5 space-y-1 text-black/80 dark:text-white/80 font-medium">
-          <li>Not using the canonical path (<span className="font-mono">skills/*/SKILL.md</span> or <span className="font-mono">.claude/skills/*/SKILL.md</span>).</li>
-          <li>Broken YAML frontmatter.</li>
-          <li>Missing or too-short description.</li>
-        </ul>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-2xl font-black">Collections (Planned)</h2>
-        <p className="text-black/80 dark:text-white/80 font-medium leading-relaxed">
-          We plan to support “Collections” (curated sets of Skills) so teams can share a bundle that works well together.
-        </p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-2xl font-black">Using With Claude Code</h2>
-        <p className="text-black/80 dark:text-white/80 font-medium leading-relaxed">
-          This marketplace is designed around SKILL.md-based workflows, and will keep prioritizing canonical layouts and
-          repository intent detection to stay Skills-only.
-        </p>
-      </section>
+      </div>
     </div>
   );
 }
-
