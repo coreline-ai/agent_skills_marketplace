@@ -62,9 +62,18 @@ venv.bak/
 # IDE
 .vscode/
 .idea/
+.cursor/
 *.swp
 *.swo
 *~
+
+# Local debug artifacts
+*.log
+*.resolved
+auth_debug.log
+debug_settings.py
+home.html
+walkthrough.md.resolved
 
 # Alembic
 *.db
