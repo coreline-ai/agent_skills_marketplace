@@ -148,9 +148,11 @@ export default function AdminDashboardPage() {
                     throw error;
                 });
 
-            const [skillsRes, pendingRes, errorRes, sourceRes, workerRes, validationRes] = await Promise.all([
+            const [skillsRes, pendingRes, recentRes, errorRes, sourceRes, workerRes, validationRes] = await Promise.all([
                 api.get<{ total: number }>("/skills?page=1&size=1"),
                 api.get<RawSkillListResponse>("/admin/raw-skills?status=pending&page=1&size=5", token),
+                // status="" intentionally means "no filter" in the API (empty string is falsy server-side).
+                api.get<RawSkillListResponse>("/admin/raw-skills?status=&page=1&size=5", token),
                 api.get<RawSkillListResponse>("/admin/raw-skills?status=error&page=1&size=1", token),
                 api.get<CrawlSourceItem[]>("/admin/crawl-sources", token),
                 workerResPromise,
@@ -186,7 +188,7 @@ export default function AdminDashboardPage() {
                 setPendingCount(pendingRes.total ?? 0);
                 setFlaggedCount(errorRes.total ?? 0);
             }
-            setRecentActivity(pendingRes.items || []);
+            setRecentActivity(recentRes.items || []);
             setCrawlSources(sourceRes || []);
             setWorkerSettings(workerRes || null);
             setWorkerStatus(workerStatusRes || null);
@@ -777,7 +779,7 @@ export default function AdminDashboardPage() {
             {/* Recent Activity Section */}
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="font-bold text-gray-900">최근 수집된 Raw Skills</h3>
+                    <h3 className="font-bold text-gray-900">최근 Raw Skills</h3>
                 </div>
                 <div className="p-0">
                     {loading ? (
@@ -790,7 +792,10 @@ export default function AdminDashboardPage() {
                                         <p className="text-sm font-medium text-gray-900 truncate max-w-lg">{item.source_url}</p>
                                         <p className="text-xs text-gray-500 mt-1 capitalize">{item.status}</p>
                                     </div>
-                                    <Link href={`/admin/skills?focus=${item.id}`} className="text-sm font-medium text-blue-600 hover:text-blue-500">
+                                    <Link
+                                        href={`/admin/skills?status=${encodeURIComponent(item.status)}&focus=${encodeURIComponent(item.id)}`}
+                                        className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                                    >
                                         검토하기
                                     </Link>
                                 </li>
