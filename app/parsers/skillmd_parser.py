@@ -6,8 +6,11 @@ from typing import Any, Optional
 
 from app.models.category_alias import CategoryAlias
 
-# Basic Pattern for Frontmatter
-FRONTMATTER_PATTERN = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
+# Frontmatter at file start:
+# ---
+# <yaml>
+# ---
+FRONTMATTER_PATTERN = re.compile(r"\A---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n|\Z)", re.DOTALL)
 
 def parse_skill_md(content: str) -> dict[str, Any]:
     """Parse SKILL.md content, extracting frontmatter."""
@@ -22,7 +25,10 @@ def parse_skill_md(content: str) -> dict[str, Any]:
         try:
             yaml_content = match.group(1)
             frontmatter_raw = yaml_content
-            metadata = yaml.safe_load(yaml_content) or {}
+            loaded = yaml.safe_load(yaml_content) or {}
+            metadata = loaded if isinstance(loaded, dict) else {}
+            if loaded is not None and not isinstance(loaded, dict):
+                frontmatter_error = "frontmatter_must_be_mapping"
             markdown_content = content[match.end():].strip()
         except yaml.YAMLError:
             frontmatter_raw = match.group(1)

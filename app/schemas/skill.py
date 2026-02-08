@@ -58,6 +58,7 @@ class SkillBase(BaseModel):
     # Interface
     inputs: Optional[dict[str, Any]] = None
     outputs: Optional[dict[str, Any]] = None
+    spec: Optional[dict[str, Any]] = None
     constraints: Optional[list[str]] = None
     triggers: Optional[list[str]] = None
 

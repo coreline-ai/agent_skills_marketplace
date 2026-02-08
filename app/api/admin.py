@@ -5,17 +5,29 @@ from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy import select
+from sqlalchemy import or_, select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, require_admin
 from app.settings import get_settings
 from app.security.auth import verify_password, create_access_token
 from app.models.raw_skill import RawSkill
+from app.models.skill import Skill
 from app.schemas.common import Page
 from app.ingest.sources import SOURCES
 from app.schemas.worker_settings import WorkerSettings, WorkerSettingsPatch
-from app.repos.system_setting_repo import get_worker_settings, patch_worker_settings
+from app.schemas.skill_validation_settings import (
+    SkillValidationSettings,
+    SkillValidationSettingsPatch,
+)
+from app.repos.system_setting_repo import (
+    get_worker_settings,
+    patch_worker_settings,
+    get_skill_validation_settings,
+    patch_skill_validation_settings,
+    get_worker_status_value,
+)
+from app.schemas.worker_status import WorkerStatus
 
 settings = get_settings()
 router = APIRouter()
@@ -49,6 +61,181 @@ async def read_users_me(current_user: Annotated[dict, Depends(require_admin)]):
     return {"username": current_user["sub"]}
 
 
+@router.get("/dashboard-stats")
+async def get_dashboard_stats(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[dict, Depends(require_admin)],
+):
+    """Aggregated counters for the admin dashboard (avoid guessing from public APIs)."""
+    # Skills
+    skills_total = (await db.execute(select(func.count()).select_from(Skill))).scalar_one()
+    skills_url_null_total = (
+        await db.execute(select(func.count()).select_from(Skill).where(Skill.url.is_(None)))
+    ).scalar_one()
+    skills_public_total = (
+        await db.execute(
+            select(func.count())
+            .select_from(Skill)
+            .where(
+                Skill.is_official.is_(True),
+                Skill.is_verified.is_(True),
+                Skill.url.is_not(None),
+                or_(
+                    Skill.url.op("~*")(
+                        r"^https://github\.com/[^/]+/[^/]+/blob/[^/]+/skills/[^/]+/SKILL\.md$"
+                    ),
+                    Skill.url.op("~*")(
+                        r"^https://github\.com/[^/]+/[^/]+/blob/[^/]+/\.claude/skills/[^/]+/SKILL\.md$"
+                    ),
+                ),
+            )
+        )
+    ).scalar_one()
+    # Public-adjacent URL patterns for debugging "why not public".
+    skills_blob_any_depth_total = (
+        await db.execute(
+            select(func.count())
+            .select_from(Skill)
+            .where(
+                Skill.is_official.is_(True),
+                Skill.is_verified.is_(True),
+                Skill.url.is_not(None),
+                or_(
+                    Skill.url.op("~*")(
+                        r"^https://github\.com/[^/]+/[^/]+/blob/[^/]+/skills/.+/SKILL\.md$"
+                    ),
+                    Skill.url.op("~*")(
+                        r"^https://github\.com/[^/]+/[^/]+/blob/[^/]+/\.claude/skills/.+/SKILL\.md$"
+                    ),
+                ),
+            )
+        )
+    ).scalar_one()
+    skills_repo_root_total = (
+        await db.execute(
+            select(func.count())
+            .select_from(Skill)
+            .where(
+                Skill.is_official.is_(True),
+                Skill.is_verified.is_(True),
+                Skill.url.is_not(None),
+                Skill.url.op("~*")(r"^https://github\.com/[^/]+/[^/]+/?$"),
+            )
+        )
+    ).scalar_one()
+    skills_other_total = (
+        await db.execute(
+            select(func.count())
+            .select_from(Skill)
+            .where(
+                Skill.is_official.is_(True),
+                Skill.is_verified.is_(True),
+                Skill.url.is_not(None),
+                ~Skill.url.op("~*")(r"^https://github\.com/[^/]+/[^/]+/?$"),
+                ~Skill.url.op("~*")(r"^https://github\.com/[^/]+/[^/]+/blob/[^/]+/(skills|\.claude/skills)/.+/SKILL\.md$"),
+            )
+        )
+    ).scalar_one()
+    skills_nested_noncanonical_total = max(
+        int(skills_blob_any_depth_total or 0) - int(skills_public_total or 0),
+        0,
+    )
+
+    # Raw skills
+    raw_total = (await db.execute(select(func.count()).select_from(RawSkill))).scalar_one()
+    raw_pending = (
+        await db.execute(
+            select(func.count()).select_from(RawSkill).where(RawSkill.parse_status == "pending")
+        )
+    ).scalar_one()
+    raw_processed = (
+        await db.execute(
+            select(func.count()).select_from(RawSkill).where(RawSkill.parse_status == "processed")
+        )
+    ).scalar_one()
+    raw_error = (
+        await db.execute(
+            select(func.count()).select_from(RawSkill).where(RawSkill.parse_status == "error")
+        )
+    ).scalar_one()
+
+    raw_error_claude_spec = (
+        await db.execute(
+            select(func.count())
+            .select_from(RawSkill)
+            .where(RawSkill.parse_status == "error", RawSkill.parse_error["type"].astext == "claude_spec")
+        )
+    ).scalar_one()
+    raw_error_quality = (
+        await db.execute(
+            select(func.count())
+            .select_from(RawSkill)
+            .where(RawSkill.parse_status == "error", RawSkill.parse_error["type"].astext == "quality")
+        )
+    ).scalar_one()
+
+    # Spec coverage: older processed rows may not have claude_spec in parsed_data.
+    raw_processed_skill_md = (
+        await db.execute(
+            select(func.count())
+            .select_from(RawSkill)
+            .where(
+                RawSkill.parse_status == "processed",
+                RawSkill.source_url.ilike("%/SKILL.md"),
+            )
+        )
+    ).scalar_one()
+    raw_processed_skill_md_missing_spec = (
+        await db.execute(
+            select(func.count())
+            .select_from(RawSkill)
+            .where(
+                RawSkill.parse_status == "processed",
+                RawSkill.source_url.ilike("%/SKILL.md"),
+                or_(
+                    RawSkill.parsed_data.is_(None),
+                    ~RawSkill.parsed_data.has_key("claude_spec"),  # type: ignore[attr-defined]
+                ),
+            )
+        )
+    ).scalar_one()
+
+    return {
+        "skills_total": int(skills_total or 0),
+        "skills_public_total": int(skills_public_total or 0),
+        "skills_non_public_total": max(int(skills_total or 0) - int(skills_public_total or 0), 0),
+        "skills_url_null_total": int(skills_url_null_total or 0),
+        "skills_blob_any_depth_total": int(skills_blob_any_depth_total or 0),
+        "skills_nested_noncanonical_total": int(skills_nested_noncanonical_total or 0),
+        "skills_repo_root_total": int(skills_repo_root_total or 0),
+        "skills_other_total": int(skills_other_total or 0),
+        "raw_total": int(raw_total or 0),
+        "raw_pending": int(raw_pending or 0),
+        "raw_processed": int(raw_processed or 0),
+        "raw_error": int(raw_error or 0),
+        "raw_error_claude_spec": int(raw_error_claude_spec or 0),
+        "raw_error_quality": int(raw_error_quality or 0),
+        "raw_processed_skill_md": int(raw_processed_skill_md or 0),
+        "raw_processed_skill_md_missing_spec": int(raw_processed_skill_md_missing_spec or 0),
+    }
+
+
+@router.get("/worker-status", response_model=WorkerStatus)
+async def get_worker_status(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[dict, Depends(require_admin)],
+):
+    """Return the worker heartbeat (best-effort)."""
+    value = await get_worker_status_value(db)
+    if not isinstance(value, dict):
+        return WorkerStatus()
+    try:
+        return WorkerStatus.model_validate(value)
+    except Exception:
+        # Don't fail admin UI due to a malformed row.
+        return WorkerStatus()
+
+
 @router.get("/raw-skills", response_model=Page[dict]) # TODO: Use RawSkill schema
 async def list_raw_skills(
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -63,7 +250,6 @@ async def list_raw_skills(
         stmt = stmt.where(RawSkill.parse_status == status)
     
     # Count total
-    from sqlalchemy import func
     count_stmt = select(func.count()).select_from(RawSkill)
     if status:
         count_stmt = count_stmt.where(RawSkill.parse_status == status)
@@ -94,6 +280,50 @@ async def list_raw_skills(
         size=size,
         pages=total_pages
     )
+
+
+@router.post("/raw-skills/reparse")
+async def reparse_raw_skills(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[dict, Depends(require_admin)],
+    limit: int = Query(100, ge=1, le=5000),
+    only_skill_md: bool = Query(True),
+    only_missing_claude_spec: bool = Query(True),
+):
+    """
+    Force re-parse/re-validate existing RawSkills by setting parse_status back to "pending".
+
+    This is useful when you introduce new validation/normalization logic (e.g. Claude SKILL.md spec),
+    because the worker only re-parses items whose content changed.
+    """
+    stmt = select(RawSkill.id).where(RawSkill.parse_status == "processed")
+    if only_skill_md:
+        stmt = stmt.where(
+            or_(
+                RawSkill.source_url.ilike("%/SKILL.md"),
+                RawSkill.external_id.ilike("%/SKILL.md"),
+            )
+        )
+    if only_missing_claude_spec:
+        # Only reparse rows that were processed by older builds (no spec validation output yet).
+        stmt = stmt.where(
+            or_(
+                RawSkill.parsed_data.is_(None),
+                ~RawSkill.parsed_data.has_key("claude_spec"),  # type: ignore[attr-defined]
+            )
+        )
+    stmt = stmt.order_by(RawSkill.updated_at.desc()).limit(limit)
+    ids = (await db.execute(stmt)).scalars().all()
+    if not ids:
+        return {"updated": 0}
+
+    await db.execute(
+        update(RawSkill)
+        .where(RawSkill.id.in_(ids))
+        .values(parse_status="pending", parse_error=None)
+    )
+    await db.commit()
+    return {"updated": len(ids)}
 
 
 from fastapi import BackgroundTasks
@@ -216,6 +446,31 @@ async def update_worker_settings(
     """Update runtime settings used by the worker loop."""
     try:
         updated = await patch_worker_settings(db, payload)
+        await db.commit()
+        return updated
+    except ValueError as exc:
+        await db.rollback()
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@router.get("/skill-validation-settings", response_model=SkillValidationSettings)
+async def read_skill_validation_settings(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[dict, Depends(require_admin)],
+):
+    """Read skill validation/enforcement settings used by ingestion."""
+    return await get_skill_validation_settings(db)
+
+
+@router.patch("/skill-validation-settings", response_model=SkillValidationSettings)
+async def update_skill_validation_settings(
+    payload: SkillValidationSettingsPatch,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[dict, Depends(require_admin)],
+):
+    """Update skill validation/enforcement settings used by ingestion."""
+    try:
+        updated = await patch_skill_validation_settings(db, payload)
         await db.commit()
         return updated
     except ValueError as exc:

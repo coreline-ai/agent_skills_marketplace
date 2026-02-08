@@ -64,7 +64,7 @@ export default function AdminSkillsPage() {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-900">Manage Skills</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Raw Skills Queue</h1>
                 <div className="flex gap-2">
                     {/* Filter buttons could go here */}
                 </div>
@@ -72,7 +72,7 @@ export default function AdminSkillsPage() {
 
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                 <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                    <h2 className="font-semibold text-gray-900">Pending Ingestion Review</h2>
+                    <h2 className="font-semibold text-gray-900">Pending Parse (worker queue)</h2>
                     <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-full">
                         {total} Items
                     </span>

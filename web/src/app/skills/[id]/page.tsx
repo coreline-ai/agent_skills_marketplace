@@ -38,6 +38,7 @@ interface SkillDetail {
     url?: string | null;
     inputs?: Record<string, unknown> | null;
     outputs?: Record<string, unknown> | null;
+    spec?: Record<string, unknown> | null;
 }
 
 // Ensure dynamic rendering
@@ -72,6 +73,13 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
         inputs: skill.inputs,
         outputs: skill.outputs,
     };
+    const spec = skill.spec || null;
+    const allowedTools = Array.isArray(spec?.["allowed-tools"])
+        ? (spec?.["allowed-tools"] as unknown[]).filter((v) => typeof v === "string") as string[]
+        : [];
+    const userInvocable = typeof spec?.["user-invocable"] === "boolean" ? (spec?.["user-invocable"] as boolean) : null;
+    const disableModelInvocation =
+        typeof spec?.["disable-model-invocation"] === "boolean" ? (spec?.["disable-model-invocation"] as boolean) : null;
 
     return (
         <div className="max-w-5xl mx-auto space-y-8 pb-12">
@@ -235,6 +243,51 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
                                     {new Date(skill.updated_at).toLocaleDateString()}
                                 </span>
                             </div>
+                            {(allowedTools.length > 0 || userInvocable !== null || disableModelInvocation !== null) && (
+                                <div className="pt-4 mt-2 border-t border-gray-100 dark:border-white/5">
+                                    <div className="flex flex-col gap-3">
+                                        <h4 className="text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
+                                            Claude Spec
+                                        </h4>
+                                        {allowedTools.length > 0 && (
+                                            <div className="flex flex-wrap gap-2">
+                                                {allowedTools.slice(0, 10).map((tool) => (
+                                                    <span
+                                                        key={tool}
+                                                        className="px-2.5 py-1 bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 rounded-lg text-[11px] font-bold"
+                                                    >
+                                                        {tool}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {(userInvocable !== null || disableModelInvocation !== null) && (
+                                            <div className="grid grid-cols-1 gap-2">
+                                                {userInvocable !== null && (
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-sm font-medium text-gray-500 dark:text-zinc-500">
+                                                            user-invocable
+                                                        </span>
+                                                        <span className="text-sm font-bold text-gray-900 dark:text-white">
+                                                            {userInvocable ? "true" : "false"}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {disableModelInvocation !== null && (
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-sm font-medium text-gray-500 dark:text-zinc-500">
+                                                            disable-model-invocation
+                                                        </span>
+                                                        <span className="text-sm font-bold text-gray-900 dark:text-white">
+                                                            {disableModelInvocation ? "true" : "false"}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                             <div className="pt-4 mt-2 border-t border-gray-100 dark:border-white/5">
                                 <div className="flex flex-col gap-3">
                                     <h4 className="text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider mb-1">Source Links</h4>

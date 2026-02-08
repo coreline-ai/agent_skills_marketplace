@@ -31,7 +31,8 @@ class RawSkill(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     
     # Parsing Status
-    parse_status: Mapped[str] = mapped_column(String, default="pending", index=True) # pending, valid, error
+    # pending: queued for parsing/normalization, processed: parsed (even if skipped), error: parsing/validation failed
+    parse_status: Mapped[str] = mapped_column(String, default="pending", index=True) # pending, processed, error
     parse_error: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
     
     # Parsed metadata/structure (if applicable)

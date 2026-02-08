@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Home, Compass, BarChart2, FolderKanban, ShieldCheck, Settings, ChevronDown, BookOpen } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "next-themes";
@@ -9,6 +10,12 @@ import { useTheme } from "next-themes";
 export function Sidebar() {
     const pathname = usePathname();
     const { resolvedTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    // next-themes resolves theme client-side; avoid rendering theme-dependent text during SSR to prevent hydration mismatch.
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Hide sidebar on admin pages EXCEPT login (admin has its own layout after login)
     const isAdminButNotLogin = pathname?.startsWith("/admin") && pathname !== "/admin/login";
@@ -20,6 +27,7 @@ export function Sidebar() {
             items: [
                 { name: "Home", href: "/", icon: Home },
                 { name: "Skills Library", href: "/skills", icon: Compass },
+                { name: "Skill Packs", href: "/packs", icon: FolderKanban },
                 { name: "Rankings", href: "/rankings", icon: BarChart2 },
                 { name: "User Guide", href: "/guide", icon: BookOpen },
             ]
@@ -97,7 +105,9 @@ export function Sidebar() {
                 <div className="h-px bg-gray-200 dark:bg-white/10 mx-2"></div>
 
                 <div className="flex justify-between items-center px-2">
-                    <span className="text-sm text-gray-500 font-medium">{resolvedTheme === 'dark' ? 'White Mode' : 'Dark Mode'}</span>
+                    <span className="text-sm text-gray-500 font-medium">
+                        {mounted ? (resolvedTheme === "dark" ? "White Mode" : "Dark Mode") : "Theme"}
+                    </span>
                     <div className="scale-90 origin-right">
                         <ThemeToggle />
                     </div>

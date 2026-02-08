@@ -1,6 +1,7 @@
 """Shared SQL filters for publicly visible skills."""
 
 import re
+from typing import Optional
 
 from sqlalchemy import or_
 from sqlalchemy.sql.elements import ColumnElement
@@ -27,7 +28,7 @@ def public_skill_conditions() -> list[ColumnElement[bool]]:
     ]
 
 
-def is_public_skill_url(url: str | None) -> bool:
+def is_public_skill_url(url: Optional[str]) -> bool:
     """Runtime equivalent of public URL policy."""
     if not url:
         return False

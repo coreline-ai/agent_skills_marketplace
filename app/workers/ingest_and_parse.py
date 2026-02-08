@@ -3,6 +3,7 @@
 import asyncio
 import hashlib
 import re
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Optional
@@ -14,7 +15,11 @@ from app.ingest.db_upsert import upsert_raw_skill
 from app.models.raw_skill import RawSkill
 from app.parsers.skillmd_parser import parse_skill_md
 from app.quality.skill_quality import validate_skill_md
+from app.quality.claude_skill_spec import validate_claude_skill_frontmatter
 from app.llm.glm_client import summarize_skill_overview, summarize_skill_detail_overview
+from app.settings import get_settings
+from app.repos.system_setting_repo import _get_skill_validation_settings_value
+from app.repos.system_setting_repo import get_worker_status_value, set_worker_status_value
 
 DEPRECATED_CATEGORY_SLUGS = {"chat", "code", "writing"}
 
@@ -80,6 +85,53 @@ GENERIC_GITHUB_LINK_PATTERN = re.compile(
 _GITHUB_BLOB_URL_RE = re.compile(
     r"^https?://github\.com/(?P<owner>[^/]+)/(?P<repo>[^/]+)/blob/(?P<branch>[^/]+)/(?P<path>.+)$"
 )
+
+
+def _utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+async def _patch_worker_status(patch: dict) -> None:
+    """Best-effort: update worker heartbeat while ingest/parse is running."""
+    try:
+        async with AsyncSessionLocal() as db:
+            current = await get_worker_status_value(db)
+            current_dict = current if isinstance(current, dict) else {}
+            merged = current_dict | patch
+            now = _utc_now_iso()
+            merged["heartbeat_at"] = now
+
+            prev_phase = current_dict.get("phase")
+            next_phase = merged.get("phase")
+            has_error = bool(patch.get("last_error") or patch.get("ingest_last_source_error"))
+            phase_changed = ("phase" in patch) and (next_phase != prev_phase)
+            if phase_changed or has_error:
+                events = merged.get("recent_events")
+                if not isinstance(events, list):
+                    events = []
+                event = {"at": now, "phase": next_phase or "unknown"}
+                for key in (
+                    "ingest_source_id",
+                    "ingest_source_type",
+                    "ingest_source_index",
+                    "ingest_source_total",
+                    "ingest_directory_url",
+                    "ingest_repo_full_name",
+                    "ingest_discovered_repo_index",
+                    "ingest_discovered_repo_total",
+                    "ingest_last_source_error",
+                ):
+                    value = merged.get(key)
+                    if value is not None and value != "":
+                        event[key] = value
+                events.append(event)
+                merged["recent_events"] = events[-50:]
+
+            await set_worker_status_value(db, merged)
+            await db.commit()
+    except Exception:
+        return
+
 
 def _extract_tag_slugs(metadata: dict) -> list[str]:
     """Extract normalized tag slugs from SKILL.md frontmatter."""
@@ -274,6 +326,24 @@ def normalize_skill_source_url(url: str) -> Optional[str]:
         if len(parts) < 2:
             return None
         owner, repo = parts[0], parts[1]
+
+        # Preserve already-canonical file URLs.
+        # Example:
+        # https://github.com/{owner}/{repo}/blob/{branch}/skills/{id}/SKILL.md
+        if len(parts) >= 5 and parts[2].lower() == "blob":
+            branch = parts[3]
+            file_path = "/".join(parts[4:])
+            return f"https://github.com/{owner}/{repo}/blob/{branch}/{file_path}"
+
+        # Best-effort conversion when the source points to a file page under /tree/.
+        # (Some crawlers may provide tree URLs even for files.)
+        if len(parts) >= 5 and parts[2].lower() == "tree":
+            branch = parts[3]
+            file_path = "/".join(parts[4:])
+            if file_path.lower().endswith("skill.md"):
+                return f"https://github.com/{owner}/{repo}/blob/{branch}/{file_path}"
+
+        # Fallback: repo root URL.
         return f"https://github.com/{owner}/{repo}"
     return None
 
@@ -353,9 +423,10 @@ def derive_skill_name(metadata: dict, source_url: Optional[str], fallback_url: s
     path_parts = [p for p in urlparse(target_url).path.split("/") if p]
     if len(path_parts) >= 2:
         folder_name = path_parts[-2]
-        pretty = folder_name.replace("-", " ").replace("_", " ").strip()
-        if pretty:
-            return pretty.title()
+        # Claude spec: if name is omitted, the directory name is used.
+        # Keep it as-is (no title-casing) for alignment; the UI can prettify if needed.
+        if folder_name:
+            return folder_name.strip()
 
     canonical = normalize_github_repo_url(target_url)
     if canonical:
@@ -427,10 +498,12 @@ def extract_skill_candidates_from_markdown(content: str) -> list[dict[str, str]]
 
     return candidates
 
-async def ingest_raw(db: AsyncSession):
+async def ingest_raw(db: AsyncSession) -> int:
     """Fetch from sources and upsert raw skills."""
+    await _patch_worker_status({"phase": "ingest_fetch_sources"})
     print("Fetching sources...")
-    results = await run_ingest_sources()
+    results = await run_ingest_sources(progress=_patch_worker_status)
+    await _patch_worker_status({"phase": "ingest_upsert_raw", "ingest_results": int(len(results))})
     
     count = 0
     for res in results:
@@ -462,15 +535,37 @@ async def ingest_raw(db: AsyncSession):
             },
         )
         count += 1
+        if count % 100 == 0:
+            await _patch_worker_status(
+                {
+                    "phase": "ingest_upsert_raw",
+                    "ingested_so_far": int(count),
+                    "ingest_results": int(len(results)),
+                }
+            )
         
     print(f"Ingested {count} raw items.")
+    await _patch_worker_status({"phase": "ingest_done", "last_ingested_raw_items": int(count)})
+    return count
 
 
 
-async def parse_queued_raw_skills(db: AsyncSession):
+async def parse_queued_raw_skills(db: AsyncSession) -> dict:
     """Process pending raw skills."""
     print("Processing pending raw skills...")
-    stmt = select(RawSkill).where(RawSkill.parse_status == "pending").limit(50)
+    from sqlalchemy import func
+    pending_before = (
+        await db.execute(select(func.count()).select_from(RawSkill).where(RawSkill.parse_status == "pending"))
+    ).scalar_one()
+    await _patch_worker_status({"phase": "parse_batch", "pending_before": int(pending_before or 0)})
+    # Drain faster than ingestion. This is bounded to avoid runaway CPU/DB time per loop.
+    # If this is too heavy for prod, make it a runtime setting in system_settings.
+    stmt = (
+        select(RawSkill)
+        .where(RawSkill.parse_status == "pending")
+        .order_by(RawSkill.created_at.asc())
+        .limit(500)
+    )
     result = await db.execute(stmt)
     pending_skills = result.scalars().all()
 
@@ -489,6 +584,22 @@ async def parse_queued_raw_skills(db: AsyncSession):
         or next(iter(category_id_by_slug.values()), None)
     )
     
+    # Load runtime validation policy once per batch.
+    settings = get_settings()
+    profile = str(getattr(settings, "skill_validation_profile", "lax") or "lax")
+    enforce = bool(getattr(settings, "skill_validation_enforce", False))
+    try:
+        row_value = await _get_skill_validation_settings_value(db)
+        if isinstance(row_value, dict):
+            profile = str(row_value.get("profile") or profile)
+            enforce = bool(row_value.get("enforce"))
+    except Exception:
+        # system_settings table might not exist yet.
+        pass
+
+    processed = 0
+    errors = 0
+
     for raw in pending_skills:
         try:
             print(f"DEBUG: Processing RawSkill {raw.id} | URL: '{raw.source_url}'")
@@ -504,6 +615,7 @@ async def parse_queued_raw_skills(db: AsyncSession):
                 raw.parse_error = None
                 raw.parse_status = "processed"
                 await db.flush()
+                processed += 1
                 continue
 
             trusted_repo, reject_reason = should_accept_repo_metadata(ingest_meta)
@@ -516,6 +628,7 @@ async def parse_queued_raw_skills(db: AsyncSession):
                 raw.parse_error = None
                 raw.parse_status = "processed"
                 await db.flush()
+                processed += 1
                 continue
 
             if is_skill_md_source_url(raw.source_url):
@@ -536,8 +649,28 @@ async def parse_queued_raw_skills(db: AsyncSession):
                     raw.parse_error = None
                     raw.parse_status = "processed"
                     await db.flush()
+                    processed += 1
                     continue
 
+                spec_result = validate_claude_skill_frontmatter(
+                    metadata=metadata,
+                    body=body,
+                    canonical_url=canonical_url,
+                    frontmatter_raw=frontmatter_raw,
+                    frontmatter_error=frontmatter_error,
+                    profile=profile,
+                )
+                # Always compute strict result for observability (but don't block unless enforce+profile=strict).
+                strict_result = validate_claude_skill_frontmatter(
+                    metadata=metadata,
+                    body=body,
+                    canonical_url=canonical_url,
+                    frontmatter_raw=frontmatter_raw,
+                    frontmatter_error=frontmatter_error,
+                    profile="strict",
+                )
+
+                # Use existing derivation for human-friendly name/description, but keep spec-derived too.
                 name = derive_skill_name(metadata, source_url, canonical_url)
                 description = derive_skill_description(metadata, body)
                 tag_slugs = _extract_tag_slugs(metadata)
@@ -549,6 +682,44 @@ async def parse_queued_raw_skills(db: AsyncSession):
                     frontmatter_error=frontmatter_error,
                 )
                 ingest_meta = raw.parsed_data if isinstance(raw.parsed_data, dict) else {}
+
+                # Store spec validation output for admin review / gradual rollout.
+                ingest_meta = {
+                    **ingest_meta,
+                    "claude_spec": {
+                        "profile": profile,
+                        "ok": spec_result.ok,
+                        "errors": spec_result.errors,
+                        "warnings": spec_result.warnings,
+                        "normalized": spec_result.normalized,
+                        "derived_name": spec_result.derived_name,
+                        "derived_description": spec_result.derived_description,
+                    },
+                    "claude_spec_strict": {
+                        "ok": strict_result.ok,
+                        "errors": strict_result.errors,
+                        "warnings": strict_result.warnings,
+                    },
+                }
+
+                if enforce and not spec_result.ok:
+                    raw.parsed_data = {
+                        **ingest_meta,
+                        "source_type": "skill_md",
+                        "name": name,
+                        "quality": {
+                            "ok": False,
+                            "score": quality.score,
+                            "errors": quality.errors,
+                            "warnings": quality.warnings,
+                        },
+                    }
+                    raw.parse_status = "error"
+                    raw.parse_error = {"type": "claude_spec", "errors": spec_result.errors}
+                    await db.flush()
+                    errors += 1
+                    continue
+
                 if not quality.ok:
                     raw.parsed_data = {
                         **ingest_meta,
@@ -564,6 +735,7 @@ async def parse_queued_raw_skills(db: AsyncSession):
                     raw.parse_status = "error"
                     raw.parse_error = {"type": "quality", "errors": quality.errors}
                     await db.flush()
+                    errors += 1
                     continue
 
                 category_slug = None
@@ -597,6 +769,11 @@ async def parse_queued_raw_skills(db: AsyncSession):
                         existing_skill.content = body
                     if category_id:
                         existing_skill.category_id = category_id
+                    existing_skill.spec = {
+                        **(spec_result.normalized or {}),
+                        "derived_name": spec_result.derived_name,
+                        "derived_description": spec_result.derived_description,
+                    }
                     existing_skill.is_official = True
                     existing_skill.is_verified = True
                     created_count = 0
@@ -629,6 +806,11 @@ async def parse_queued_raw_skills(db: AsyncSession):
                         content=body,
                         category_id=category_id,
                         url=canonical_url,
+                        spec={
+                            **(spec_result.normalized or {}),
+                            "derived_name": spec_result.derived_name,
+                            "derived_description": spec_result.derived_description,
+                        },
                         is_official=True,
                         is_verified=True,
                     )
@@ -662,14 +844,45 @@ async def parse_queued_raw_skills(db: AsyncSession):
                 raw.parse_error = None
                 raw.parse_status = "processed"
                 await db.flush()
+                processed += 1
                 continue
 
         except Exception as e:
             print(f"Error parsing raw skill {raw.id}: {e}")
             raw.parse_status = "error"
             raw.parse_error = {"message": str(e)}
+            errors += 1
             
     await db.commit()
+
+    pending_after = (
+        await db.execute(select(func.count()).select_from(RawSkill).where(RawSkill.parse_status == "pending"))
+    ).scalar_one()
+
+    # Keep counters consistent with the queue delta.
+    # `errors` counts rows moved to parse_status="error".
+    drained = max(int(pending_before or 0) - int(pending_after or 0), 0)
+    processed_effective = max(int(drained) - int(errors), 0)
+    await _patch_worker_status(
+        {
+            "phase": "parse_done",
+            "pending_before": int(pending_before or 0),
+            "pending_after": int(pending_after or 0),
+            "processed": int(processed_effective),
+            "errors": int(errors),
+            "batch_size": int(len(pending_skills)),
+            "drained": int(drained),
+        }
+    )
+
+    return {
+        "pending_before": int(pending_before or 0),
+        "pending_after": int(pending_after or 0),
+        "processed": int(processed_effective),
+        "errors": int(errors),
+        "batch_size": int(len(pending_skills)),
+        "drained": int(drained),
+    }
 
 
 async def backfill_missing_summaries(db: AsyncSession, *, limit: int = 15) -> int:
@@ -879,11 +1092,75 @@ async def backfill_missing_tags_from_raw_frontmatter(db: AsyncSession, *, limit:
     return updated
 
 
+async def backfill_missing_specs_from_raw_frontmatter(db: AsyncSession, *, limit: int = 200) -> int:
+    """Backfill Skill.spec from RawSkill frontmatter when present."""
+    if limit <= 0:
+        return 0
+
+    from app.models.skill import Skill
+
+    stmt = (
+        select(Skill)
+        .where(Skill.url.is_not(None))
+        .where(Skill.spec.is_(None))
+        .order_by(Skill.updated_at.desc())
+        .limit(int(limit))
+    )
+    skills = (await db.execute(stmt)).scalars().all()
+    if not skills:
+        return 0
+
+    updated = 0
+    for skill in skills:
+        canonical_url = (skill.url or "").strip()
+        if not canonical_url:
+            continue
+        raw_url = normalize_to_raw_github_url(canonical_url)
+
+        raw = (
+            await db.execute(
+                select(RawSkill).where(
+                    (RawSkill.external_id == raw_url)
+                    | (RawSkill.source_url == raw_url)
+                    | (RawSkill.external_id == canonical_url)
+                    | (RawSkill.source_url == canonical_url)
+                ).limit(1)
+            )
+        ).scalar_one_or_none()
+        if not raw or not raw.content:
+            continue
+
+        parsed = parse_skill_md(raw.content)
+        metadata = parsed.get("metadata") if isinstance(parsed, dict) else {}
+        body = parsed.get("content") if isinstance(parsed, dict) else ""
+        frontmatter_raw = parsed.get("frontmatter_raw") if isinstance(parsed, dict) else None
+        frontmatter_error = parsed.get("frontmatter_error") if isinstance(parsed, dict) else None
+
+        spec_result = validate_claude_skill_frontmatter(
+            metadata=metadata if isinstance(metadata, dict) else {},
+            body=body or "",
+            canonical_url=canonical_url,
+            frontmatter_raw=frontmatter_raw,
+            frontmatter_error=frontmatter_error,
+            profile="lax",
+        )
+        skill.spec = {
+            **(spec_result.normalized or {}),
+            "derived_name": spec_result.derived_name,
+            "derived_description": spec_result.derived_description,
+        }
+        updated += 1
+
+    if updated:
+        await db.commit()
+    return updated
+
+
 async def run():
     """Run ingest and parse workflow."""
     async with AsyncSessionLocal() as db:
-        await ingest_raw(db)
-        await parse_queued_raw_skills(db)
+        ingested = await ingest_raw(db)
+        parse_stats = await parse_queued_raw_skills(db)
         try:
             # Faster convergence: fill existing rows in a few cycles, then this becomes a no-op.
             filled = await backfill_missing_source_links(db, limit=1000)
@@ -898,6 +1175,12 @@ async def run():
         except Exception as e:
             print(f"Tag backfill error: {e}")
         try:
+            filled = await backfill_missing_specs_from_raw_frontmatter(db, limit=500)
+            if filled:
+                print(f"Backfilled {filled} missing specs from frontmatter.")
+        except Exception as e:
+            print(f"Spec backfill error: {e}")
+        try:
             filled = await backfill_missing_summaries(db, limit=10)
             if filled:
                 print(f"Backfilled {filled} missing summaries.")
@@ -910,6 +1193,10 @@ async def run():
                 print(f"Backfilled {filled} missing detail overviews.")
         except Exception as e:
             print(f"Detail overview backfill error: {e}")
+    return {
+        "ingested": int(ingested or 0),
+        "parse": parse_stats if isinstance(parse_stats, dict) else None,
+    }
 
 if __name__ == "__main__":
     asyncio.run(run())

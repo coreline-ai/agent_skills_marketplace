@@ -52,8 +52,8 @@ def validate_skill_md(
     else:
         # Known Claude Code indexing pitfall: YAML multiline indicators for description.
         if DESCRIPTION_MULTILINE_PATTERN.search(frontmatter_raw):
-            errors.append("description_multiline_yaml_not_supported")
-            score -= 25
+            warnings.append("description_multiline_yaml_not_supported")
+            score -= 10
 
     description = _as_str(metadata.get("description")) or _as_str(metadata.get("summary"))
     if not description:
@@ -70,31 +70,30 @@ def validate_skill_md(
             break
 
     if not description:
-        errors.append("missing_description")
-        score -= 30
+        # Spec allows falling back to the first paragraph; treat missing description as a warning.
+        warnings.append("missing_description")
+        score -= 15
     else:
         if len(description) < 20:
-            errors.append("description_too_short")
-            score -= 20
+            # Marketplace heuristic; do not hard-reject spec-valid skills.
+            warnings.append("description_too_short")
+            score -= 10
         if len(description) > 1024:
             warnings.append("description_too_long")
             score -= 5
 
-    # Frontmatter types: enforce scalar strings for tool lists.
+    # Frontmatter types: allow strings ("Read, Grep") or lists; warn on other types.
     for key in ("allowed-tools", "allowed_tools", "tools"):
-        if key in metadata and not isinstance(metadata.get(key), str):
-            errors.append(f"{key}_must_be_string")
-            score -= 20
+        if key in metadata and not isinstance(metadata.get(key), (str, list)):
+            warnings.append(f"{key}_must_be_string_or_list")
+            score -= 10
 
     model = _as_str(metadata.get("model"))
     if model and model.lower() not in ALLOWED_MODELS:
-        errors.append("invalid_model")
-        score -= 10
+        warnings.append("invalid_model")
+        score -= 5
 
-    # Known bug in some environments: "name" in frontmatter can break registrations.
-    if "name" in metadata:
-        warnings.append("frontmatter_name_field_present")
-        score -= 2
+    # "name" is a normal field in the spec; no penalty.
 
     # Size guard: keep skills reasonably sized.
     body_lines = len((body or "").splitlines())
@@ -105,4 +104,3 @@ def validate_skill_md(
     score = max(0, min(100, score))
     ok = len(errors) == 0
     return SkillQualityResult(ok=ok, score=score, errors=errors, warnings=warnings)
-

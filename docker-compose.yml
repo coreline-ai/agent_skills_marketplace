@@ -65,7 +65,7 @@ services:
       NEXT_PUBLIC_API_URL: http://localhost:8000/api
       INTERNAL_API_URL: http://api:8000/api
     ports:
-      - "3001:3000"
+      - "3004:3000"
 
 volumes:
   skills_db_data:

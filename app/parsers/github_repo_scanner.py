@@ -43,7 +43,7 @@ NOISE_FILES = {
 REPO_URL_PATTERN = re.compile(r"https?://github\.com/([^/]+)/([^/]+)/?.*", re.IGNORECASE)
 
 
-def extract_repo_full_name(url: str | None) -> Optional[str]:
+def extract_repo_full_name(url: Optional[str]) -> Optional[str]:
     """Extract owner/repo from a GitHub URL."""
     if not url:
         return None

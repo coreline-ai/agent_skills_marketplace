@@ -10,7 +10,11 @@ from sqlalchemy import select
 from app.api.deps import get_db, require_admin
 from app.models.raw_skill import RawSkill
 from app.schemas.admin_skill import AdminSkillCreate
+from app.schemas.skill_validation_report import SkillValidationReport
 from app.repos.admin_skill_repo import AdminSkillRepo
+from app.parsers.skillmd_parser import parse_skill_md
+from app.quality.claude_skill_spec import validate_claude_skill_frontmatter
+from app.workers.ingest_and_parse import normalize_skill_source_url, is_skill_md_source_url, is_canonical_skill_doc_url
 
 router = APIRouter()
 
@@ -54,3 +58,65 @@ async def approve_skill(
     
     await db.commit()
     return skill
+
+
+@router.get("/skill-validation-report", response_model=SkillValidationReport)
+async def skill_validation_report(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[dict, Depends(require_admin)],
+    profile: str = "strict",
+    limit: int = 200,
+):
+    """Dry-run report: how many recent RawSkills would fail Claude spec validation."""
+    profile_norm = (profile or "strict").strip().lower()
+    if profile_norm not in {"lax", "strict"}:
+        profile_norm = "strict"
+    limit_norm = max(1, min(int(limit), 5000))
+
+    stmt = (
+        select(RawSkill)
+        .where(RawSkill.content.is_not(None))
+        .order_by(RawSkill.created_at.desc())
+        .limit(limit_norm)
+    )
+    raws = (await db.execute(stmt)).scalars().all()
+
+    examined = 0
+    ok = 0
+    error = 0
+    error_counts: dict[str, int] = {}
+
+    for raw in raws:
+        source_url = (raw.source_url or "").strip()
+        if not is_skill_md_source_url(source_url):
+            continue
+        canonical_url = normalize_skill_source_url(source_url) or source_url
+        if not is_canonical_skill_doc_url(canonical_url):
+            continue
+
+        examined += 1
+        parsed = parse_skill_md(raw.content or "")
+        metadata = parsed.get("metadata") if isinstance(parsed, dict) else {}
+        body = parsed.get("content") if isinstance(parsed, dict) else ""
+        frontmatter_raw = parsed.get("frontmatter_raw") if isinstance(parsed, dict) else None
+        frontmatter_error = parsed.get("frontmatter_error") if isinstance(parsed, dict) else None
+
+        res = validate_claude_skill_frontmatter(
+            metadata=metadata if isinstance(metadata, dict) else {},
+            body=body or "",
+            canonical_url=canonical_url,
+            frontmatter_raw=frontmatter_raw,
+            frontmatter_error=frontmatter_error,
+            profile=profile_norm,
+        )
+        if res.ok:
+            ok += 1
+        else:
+            error += 1
+            for code in res.errors:
+                error_counts[code] = error_counts.get(code, 0) + 1
+
+    top_errors = sorted(error_counts.items(), key=lambda kv: (-kv[1], kv[0]))[:20]
+    return SkillValidationReport(
+        profile=profile_norm, limit=limit_norm, examined=examined, ok=ok, error=error, top_errors=top_errors
+    )

@@ -40,6 +40,12 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = "INFO"
 
+    # Skill validation/enforcement (ingest pipeline)
+    # - profile: "lax" (default) logs warnings but only hard failures become errors
+    # - profile: "strict" elevates more spec issues to errors
+    skill_validation_profile: str = "lax"
+    skill_validation_enforce: bool = False
+
     @field_validator("admin_password_hash", mode="before")
     @classmethod
     def normalize_admin_hash(cls, value: str) -> str:

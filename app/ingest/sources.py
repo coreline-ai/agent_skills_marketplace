@@ -67,6 +67,10 @@ SOURCES = [
         "url": "https://claudemarketplaces.com/",
         "max_repos": 60,
         "max_sitemap_pages": 0,
+        # Directory sources can include normal project repos with `.claude/skills`.
+        # To avoid ingesting project-local skill bundles as marketplace items, we only
+        # discover canonical `skills/*/SKILL.md` layout from directory sources.
+        "allowed_path_globs": ["skills/*/SKILL.md"],
         "min_repo_type": "skills_only",
     },
     {
@@ -75,6 +79,7 @@ SOURCES = [
         "url": "https://skillsforge.dev/",
         "max_repos": 60,
         "max_sitemap_pages": 0,
+        "allowed_path_globs": ["skills/*/SKILL.md"],
         "min_repo_type": "skills_only",
     },
     {
@@ -83,6 +88,7 @@ SOURCES = [
         "url": "https://skillsdir.dev/",
         "max_repos": 60,
         "max_sitemap_pages": 80,
+        "allowed_path_globs": ["skills/*/SKILL.md"],
         "min_repo_type": "skills_only",
     },
     {
@@ -91,6 +97,7 @@ SOURCES = [
         "url": "https://claudecodemarketplace.net/",
         "max_repos": 60,
         "max_sitemap_pages": 80,
+        "allowed_path_globs": ["skills/*/SKILL.md"],
         "min_repo_type": "skills_only",
     },
     {
@@ -107,7 +114,9 @@ SOURCES = [
         "max_repos": 80,
         "max_pages": 2,
         "per_page": 50,
-        "allowed_path_globs": ["skills/*/SKILL.md", ".claude/skills/*/SKILL.md"],
+        # Global search also matches normal application repos. Keep discovery limited
+        # to canonical marketplace layout to avoid pulling project-local `.claude/skills`.
+        "allowed_path_globs": ["skills/*/SKILL.md"],
         "min_repo_type": "skills_only",
     },
 ]
@@ -328,26 +337,64 @@ async def fetch_source_content(source: dict[str, Any]) -> Optional[str]:
     return await fetch_text(source["url"])
 
 
-async def run_ingest_sources():
-    """Fetch all configured sources."""
+async def run_ingest_sources(progress=None):
+    """Fetch all configured sources.
+
+    If provided, `progress` is called with a dict payload describing the current stage.
+    It may be a sync or async callable.
+    """
+    async def _emit(payload: dict) -> None:
+        if progress is None:
+            return
+        try:
+            value = progress(payload)
+            if hasattr(value, "__await__"):
+                await value
+        except Exception:
+            # Observability must never break ingestion.
+            return
+
     client = await get_http_client()
     results = []
     scanned_repos: set[str] = set()
     
-    for source in SOURCES:
+    source_total = len(SOURCES)
+    for idx, source in enumerate(SOURCES, start=1):
         source_type = source.get("type", "markdown_list")
         source_id = source["id"]
+        await _emit(
+            {
+                "phase": "ingest_source_start",
+                "ingest_source_id": source_id,
+                "ingest_source_type": source_type,
+                "ingest_source_index": idx,
+                "ingest_source_total": source_total,
+            }
+        )
 
         if source_type == "github_repo":
             repo_full_name = source["repo_full_name"]
             if repo_full_name.lower() in scanned_repos:
                 continue
             scanned_repos.add(repo_full_name.lower())
-            candidates = await list_repo_skills_candidates(
-                repo_full_name,
-                allowed_path_globs=source.get("allowed_path_globs"),
-                min_repo_type=str(source.get("min_repo_type", "skills_focused")),
-            )
+            try:
+                candidates = await list_repo_skills_candidates(
+                    repo_full_name,
+                    allowed_path_globs=source.get("allowed_path_globs"),
+                    min_repo_type=str(source.get("min_repo_type", "skills_focused")),
+                )
+            except Exception as exc:
+                await _emit(
+                    {
+                        "phase": "ingest_source_error",
+                        "ingest_source_id": source_id,
+                        "ingest_source_type": source_type,
+                        "ingest_source_index": idx,
+                        "ingest_source_total": source_total,
+                        "ingest_last_source_error": str(exc),
+                    }
+                )
+                continue
             for candidate in candidates:
                 content = await fetch_text(candidate["url"], client)
                 if not content:
@@ -369,11 +416,44 @@ async def run_ingest_sources():
                         "repo_canonical_skill_files": candidate.get("repo_canonical_skill_files"),
                     }
                 )
+            await _emit(
+                {
+                    "phase": "ingest_source_done",
+                    "ingest_source_id": source_id,
+                    "ingest_source_type": source_type,
+                    "ingest_source_index": idx,
+                    "ingest_source_total": source_total,
+                }
+            )
             continue
 
         if source_type == "web_directory":
             directory_url = source["url"]
-            repos = await discover_repos_from_web_directory(source, client)
+            await _emit(
+                {
+                    "phase": "ingest_discover_repos",
+                    "ingest_source_id": source_id,
+                    "ingest_source_type": source_type,
+                    "ingest_source_index": idx,
+                    "ingest_source_total": source_total,
+                    "ingest_directory_url": directory_url,
+                }
+            )
+            try:
+                repos = await discover_repos_from_web_directory(source, client)
+            except Exception as exc:
+                await _emit(
+                    {
+                        "phase": "ingest_source_error",
+                        "ingest_source_id": source_id,
+                        "ingest_source_type": source_type,
+                        "ingest_source_index": idx,
+                        "ingest_source_total": source_total,
+                        "ingest_directory_url": directory_url,
+                        "ingest_last_source_error": str(exc),
+                    }
+                )
+                continue
             max_repos = int(source.get("max_repos", 60))
             discovered_count = 0
 
@@ -385,11 +465,37 @@ async def run_ingest_sources():
                 scanned_repos.add(repo_full_name.lower())
                 discovered_count += 1
 
-                candidates = await list_repo_skills_candidates(
-                    repo_full_name,
-                    allowed_path_globs=source.get("allowed_path_globs"),
-                    min_repo_type=str(source.get("min_repo_type", "skills_only")),
+                await _emit(
+                    {
+                        "phase": "ingest_scan_repo",
+                        "ingest_source_id": source_id,
+                        "ingest_source_type": source_type,
+                        "ingest_source_index": idx,
+                        "ingest_source_total": source_total,
+                        "ingest_repo_full_name": repo_full_name,
+                        "ingest_discovered_repo_index": discovered_count,
+                        "ingest_discovered_repo_total": min(len(repos), max_repos),
+                    }
                 )
+                try:
+                    candidates = await list_repo_skills_candidates(
+                        repo_full_name,
+                        allowed_path_globs=source.get("allowed_path_globs"),
+                        min_repo_type=str(source.get("min_repo_type", "skills_only")),
+                    )
+                except Exception as exc:
+                    await _emit(
+                        {
+                            "phase": "ingest_source_error",
+                            "ingest_source_id": source_id,
+                            "ingest_source_type": source_type,
+                            "ingest_source_index": idx,
+                            "ingest_source_total": source_total,
+                            "ingest_repo_full_name": repo_full_name,
+                            "ingest_last_source_error": str(exc),
+                        }
+                    )
+                    continue
                 for candidate in candidates:
                     content = await fetch_text(candidate["url"], client)
                     if not content:
@@ -412,10 +518,42 @@ async def run_ingest_sources():
                             "repo_canonical_skill_files": candidate.get("repo_canonical_skill_files"),
                         }
                     )
+            await _emit(
+                {
+                    "phase": "ingest_source_done",
+                    "ingest_source_id": source_id,
+                    "ingest_source_type": source_type,
+                    "ingest_source_index": idx,
+                    "ingest_source_total": source_total,
+                    "ingest_discovered_repos": discovered_count,
+                }
+            )
             continue
 
         if source_type == "github_search":
-            repos = await discover_repos_from_github_search(source, client)
+            await _emit(
+                {
+                    "phase": "ingest_github_search",
+                    "ingest_source_id": source_id,
+                    "ingest_source_type": source_type,
+                    "ingest_source_index": idx,
+                    "ingest_source_total": source_total,
+                }
+            )
+            try:
+                repos = await discover_repos_from_github_search(source, client)
+            except Exception as exc:
+                await _emit(
+                    {
+                        "phase": "ingest_source_error",
+                        "ingest_source_id": source_id,
+                        "ingest_source_type": source_type,
+                        "ingest_source_index": idx,
+                        "ingest_source_total": source_total,
+                        "ingest_last_source_error": str(exc),
+                    }
+                )
+                continue
             max_repos = int(source.get("max_repos", 60))
             discovered_count = 0
 
@@ -427,11 +565,37 @@ async def run_ingest_sources():
                 scanned_repos.add(repo_full_name.lower())
                 discovered_count += 1
 
-                candidates = await list_repo_skills_candidates(
-                    repo_full_name,
-                    allowed_path_globs=source.get("allowed_path_globs"),
-                    min_repo_type=str(source.get("min_repo_type", "skills_only")),
+                await _emit(
+                    {
+                        "phase": "ingest_scan_repo",
+                        "ingest_source_id": source_id,
+                        "ingest_source_type": source_type,
+                        "ingest_source_index": idx,
+                        "ingest_source_total": source_total,
+                        "ingest_repo_full_name": repo_full_name,
+                        "ingest_discovered_repo_index": discovered_count,
+                        "ingest_discovered_repo_total": min(len(repos), max_repos),
+                    }
                 )
+                try:
+                    candidates = await list_repo_skills_candidates(
+                        repo_full_name,
+                        allowed_path_globs=source.get("allowed_path_globs"),
+                        min_repo_type=str(source.get("min_repo_type", "skills_only")),
+                    )
+                except Exception as exc:
+                    await _emit(
+                        {
+                            "phase": "ingest_source_error",
+                            "ingest_source_id": source_id,
+                            "ingest_source_type": source_type,
+                            "ingest_source_index": idx,
+                            "ingest_source_total": source_total,
+                            "ingest_repo_full_name": repo_full_name,
+                            "ingest_last_source_error": str(exc),
+                        }
+                    )
+                    continue
                 for candidate in candidates:
                     content = await fetch_text(candidate["url"], client)
                     if not content:
@@ -454,8 +618,28 @@ async def run_ingest_sources():
                             "repo_canonical_skill_files": candidate.get("repo_canonical_skill_files"),
                         }
                     )
+            await _emit(
+                {
+                    "phase": "ingest_source_done",
+                    "ingest_source_id": source_id,
+                    "ingest_source_type": source_type,
+                    "ingest_source_index": idx,
+                    "ingest_source_total": source_total,
+                    "ingest_discovered_repos": discovered_count,
+                }
+            )
             continue
 
+        await _emit(
+            {
+                "phase": "ingest_fetch_url",
+                "ingest_source_id": source_id,
+                "ingest_source_type": source_type,
+                "ingest_source_index": idx,
+                "ingest_source_total": source_total,
+                "ingest_url": source.get("url"),
+            }
+        )
         content = await fetch_text(source["url"], client)
         if not content:
             continue
@@ -466,6 +650,15 @@ async def run_ingest_sources():
                 "url": source["url"],
                 "external_id": source["url"],
                 "source_type": source_type,
+            }
+        )
+        await _emit(
+            {
+                "phase": "ingest_source_done",
+                "ingest_source_id": source_id,
+                "ingest_source_type": source_type,
+                "ingest_source_index": idx,
+                "ingest_source_total": source_total,
             }
         )
             

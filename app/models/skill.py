@@ -44,6 +44,9 @@ class Skill(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     # Interface Definitions (JSON)
     inputs: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
     outputs: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+
+    # Spec-aligned metadata (normalized Claude Skills frontmatter, etc.)
+    spec: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
     
     # Constraints/Depencencies
     constraints: Mapped[Optional[list[str]]] = mapped_column(JSONB, nullable=True)
