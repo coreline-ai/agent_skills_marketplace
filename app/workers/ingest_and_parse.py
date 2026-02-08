@@ -560,11 +560,13 @@ async def parse_queued_raw_skills(db: AsyncSession) -> dict:
     await _patch_worker_status({"phase": "parse_batch", "pending_before": int(pending_before or 0)})
     # Drain faster than ingestion. This is bounded to avoid runaway CPU/DB time per loop.
     # If this is too heavy for prod, make it a runtime setting in system_settings.
+    # NOTE: We prefer draining a backlog quickly once it exists, but keep this
+    # bounded so a single batch doesn't monopolize the worker.
     stmt = (
         select(RawSkill)
         .where(RawSkill.parse_status == "pending")
         .order_by(RawSkill.created_at.asc())
-        .limit(500)
+        .limit(2000)
     )
     result = await db.execute(stmt)
     pending_skills = result.scalars().all()

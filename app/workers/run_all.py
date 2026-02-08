@@ -140,15 +140,27 @@ async def main():
                 pending_after = None
                 processed = None
                 errors = None
+                drained_total = 0
                 try:
                     async with AsyncSessionLocal() as db:
-                        parse_stats = await ingest_and_parse.parse_queued_raw_skills(db)
-                        if isinstance(parse_stats, dict):
+                        # Drain the queue in one loop run (no "sleep between loops"),
+                        # so admins see progress immediately after a re-queue.
+                        while True:
+                            parse_stats = await ingest_and_parse.parse_queued_raw_skills(db)
+                            if not isinstance(parse_stats, dict):
+                                break
                             pending_before = parse_stats.get("pending_before")
                             pending_after = parse_stats.get("pending_after")
                             processed = parse_stats.get("processed")
                             errors = parse_stats.get("errors")
                             drained = parse_stats.get("drained")
+                            if isinstance(drained, int):
+                                drained_total += drained
+                            # Stop when there's nothing left (or no progress).
+                            if not isinstance(pending_after, int) or pending_after <= 0:
+                                break
+                            if isinstance(drained, int) and drained <= 0:
+                                break
                 except Exception as e:
                     await _patch_worker_status({"phase": "parse_only_error", "last_error": str(e)})
                 await _patch_worker_status(
@@ -158,7 +170,7 @@ async def main():
                         "last_pending_after": int(pending_after) if isinstance(pending_after, int) else None,
                         "last_processed_in_loop": int(processed) if isinstance(processed, int) else None,
                         "last_error_count_in_loop": int(errors) if isinstance(errors, int) else None,
-                        "last_drained_in_loop": int(drained) if isinstance(drained, int) else None,
+                        "last_drained_in_loop": int(drained_total),
                     }
                 )
 
