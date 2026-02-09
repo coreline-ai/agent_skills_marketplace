@@ -281,3 +281,4 @@ docker exec -it skills_marketplace_api pytest -q
 ---
 
 Built for the AI Agent ecosystem.
+Coreline AI MIT License
