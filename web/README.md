@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌐 Agent Skills Marketplace - Web Frontend
 
-## Getting Started
+> Next.js 기반 AI 에이전트 스킬 마켓플레이스 프론트엔드
 
-First, run the development server:
+[![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.x-38B2AC.svg)](https://tailwindcss.com/)
+
+## 📋 개요
+
+이 디렉토리는 Agent Skills Marketplace의 프론트엔드 애플리케이션입니다. Next.js App Router를 사용하여 구축되었으며, 반응형 디자인과 다크모드를 지원합니다.
+
+## 🚀 시작하기
+
+### 개발 서버 실행
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+브라우저에서 [http://localhost:3004](http://localhost:3004)를 열어 확인하세요.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 프로덕션 빌드
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## 📁 프로젝트 구조
 
-To learn more about Next.js, take a look at the following resources:
+```
+web/
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── admin/              # 관리자 페이지
+│   │   │   ├── crawling/       # 플러그인 관리
+│   │   │   ├── dashboard/      # 대시보드
+│   │   │   ├── quality/        # 품질 관리
+│   │   │   └── skills/         # 스킬 관리
+│   │   ├── guide/              # 사용자 가이드
+│   │   ├── packs/              # Skill Packs
+│   │   ├── plugins/            # 플러그인 마켓플레이스
+│   │   ├── rankings/           # 스킬 랭킹 (모바일 반응형)
+│   │   ├── skills/             # 스킬 라이브러리
+│   │   ├── globals.css         # 글로벌 스타일
+│   │   ├── layout.tsx          # 루트 레이아웃
+│   │   └── page.tsx            # 랜딩 페이지
+│   └── components/             # 공유 컴포넌트
+│       ├── HeroRobot.tsx       # 히어로 섹션 (호버 비디오)
+│       ├── PluginsCrawlTrigger.tsx # 플러그인 크롤링 트리거
+│       ├── Sidebar.tsx         # 사이드바 네비게이션
+│       └── ...
+├── public/                     # 정적 파일
+└── package.json
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🎨 주요 기능
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| 페이지 | 경로 | 설명 |
+|--------|------|------|
+| 홈 | `/` | 랜딩 페이지 (호버 비디오 효과) |
+| 스킬 라이브러리 | `/skills` | 스킬 검색 및 탐색 |
+| 스킬 상세 | `/skills/[id]` | 개별 스킬 정보 |
+| 랭킹 | `/rankings` | 스킬 랭킹 (모바일 카드 레이아웃) |
+| 플러그인 | `/plugins` | 플러그인 마켓플레이스 |
+| Skill Packs | `/packs` | 레포 단위 스킬 묶음 |
+| 가이드 | `/guide` | SKILL.md 작성 가이드 |
+| 관리자 | `/admin/*` | 관리자 대시보드 |
 
-## Deploy on Vercel
+## 🎯 디자인 시스템
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **테마**: Premium Black (다크/라이트 모드)
+- **타이포그래피**: Title Case, 볼드 강조
+- **레이아웃**: 고밀도, 반응형
+- **컴포넌트**: 둥근 카드, 부드러운 그림자
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## ⚙️ 환경 변수
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+## 🔗 관련 링크
+
+- [메인 README](../README.md)
+- [API 문서](http://localhost:8000/docs)
+- [Next.js 문서](https://nextjs.org/docs)
