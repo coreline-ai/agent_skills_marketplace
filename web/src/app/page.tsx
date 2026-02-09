@@ -1,5 +1,6 @@
 import { api } from "@/app/lib/api";
 import { SkillCard } from "@/components/SkillCard";
+import { HeroRobot } from "@/components/HeroRobot";
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 
@@ -49,14 +50,14 @@ export default async function Home() {
               THE MARKETPLACE FOR AI MINDS
             </span>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white leading-tight">
-              Unlock Your AI's <br /> Agent <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-500 dark:from-white dark:to-zinc-500">Skills</span>
+              Unlock Your AI{"'"}s <br /> Agent <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-500 dark:from-white dark:to-zinc-500">Skills</span>
             </h1>
             <p className="text-gray-600 dark:text-zinc-400 text-lg leading-relaxed max-w-lg">
               Discover, integrate, and deploy high-quality skills. Community-driven, verified, and ready to run.
             </p>
             <div className="flex flex-wrap gap-4 pt-2">
               <Link href="/skills" className="px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-black border border-gray-900 dark:border-white font-medium rounded-full hover:bg-gray-800 dark:hover:bg-zinc-200 hover:shadow-lg transition-all text-sm mr-2">
-                Browse Skills Library
+                Browse Skills Lib
               </Link>
               <Link href="/rankings" className="px-6 py-3 border border-gray-300 dark:border-zinc-800 bg-white dark:bg-transparent text-gray-700 dark:text-white font-medium rounded-full hover:border-gray-400 dark:hover:border-zinc-700 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-sm">
                 View Leaderboard
@@ -65,11 +66,7 @@ export default async function Home() {
           </div>
           <div className="w-full max-w-[320px] md:max-w-[400px] flex-shrink-0 relative">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-blue-100/60 dark:bg-accent/20 blur-[60px] dark:blur-[100px] rounded-full pointer-events-none"></div>
-            <img
-              alt="AI Robot Illustration"
-              className="w-full h-auto object-contain relative z-10 drop-shadow-xl filter saturate-[0.8]"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsp3nkRcPjUJSXxoHaBpp1Ar0Gi4PJMCZn-xJzzE6ahZ78wZb8_T6cgfpTzkBBeKTlHKw2APV-Wz0aD670qH3nSmxS4-YdI_5wmTGh54kksTQtgW2JuWW9MOymqmbj8KhqjwukaloUS7DoI1vB5-JfnGXR_ZigCSMgIwkleL734fQWFtC8bzlCBK1jVsobtqs6_e0-WKj7o7hUnbEuWkayND8rD5J5h10nDa0cVKfT__-DUJIRHhKgPdLqunSo4QOeU8aMei5Z-H8"
-            />
+            <HeroRobot />
           </div>
         </div>
       </section>

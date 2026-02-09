@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, List, ShieldCheck, LogOut } from "lucide-react";
+import { LayoutDashboard, List, ShieldCheck, LogOut, Globe } from "lucide-react";
 import { api, ApiError } from "@/app/lib/api";
 import { clearAdminSession, getAdminToken } from "@/app/lib/admin-auth";
 
@@ -68,6 +68,7 @@ export default function AdminLayout({
 
     const navItems = [
         { href: "/admin/dashboard", label: "대시보드", icon: LayoutDashboard },
+        { href: "/admin/crawling", label: "플러그인 관리", icon: Globe },
         { href: "/admin/skills", label: "스킬 관리", icon: List },
         { href: "/admin/quality", label: "품질 관리", icon: ShieldCheck },
     ];

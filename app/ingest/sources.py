@@ -18,6 +18,7 @@ SOURCES = [
         "repo_full_name": "anthropics/skills",
         "allowed_path_globs": ["skills/*/SKILL.md"],
         "min_repo_type": "skills_focused",
+        "group": "plugins",
     },
     {
         "id": "claude-code-skills-marketplace-daymade",
@@ -25,6 +26,15 @@ SOURCES = [
         "repo_full_name": "daymade/claude-code-skills",
         "allowed_path_globs": ["skills/*/SKILL.md", ".claude/skills/*/SKILL.md"],
         "min_repo_type": "skills_focused",
+        "group": "plugins",
+    },
+    {
+        "id": "claude-code-skills-levnikolaevich",
+        "type": "github_repo",
+        "repo_full_name": "levnikolaevich/claude-code-skills",
+        "allowed_path_globs": ["skills/*/SKILL.md", ".claude/skills/*/SKILL.md"],
+        "min_repo_type": "skills_focused",
+        "group": "plugins",
     },
     {
         "id": "claude-skills-rknall",
@@ -32,6 +42,7 @@ SOURCES = [
         "repo_full_name": "rknall/claude-skills",
         "allowed_path_globs": ["skills/*/SKILL.md", ".claude/skills/*/SKILL.md"],
         "min_repo_type": "skills_focused",
+        "group": "plugins",
     },
     {
         "id": "claude-skills-marketplace-mhattingpete",
@@ -39,6 +50,7 @@ SOURCES = [
         "repo_full_name": "mhattingpete/claude-skills-marketplace",
         "allowed_path_globs": ["skills/*/SKILL.md", ".claude/skills/*/SKILL.md"],
         "min_repo_type": "skills_focused",
+        "group": "plugins",
     },
     {
         "id": "claude-code-marketplace-getty104",
@@ -46,6 +58,7 @@ SOURCES = [
         "repo_full_name": "getty104/claude-code-marketplace",
         "allowed_path_globs": ["skills/*/SKILL.md", ".claude/skills/*/SKILL.md"],
         "min_repo_type": "skills_focused",
+        "group": "plugins",
     },
     {
         "id": "claude-skills-jamie-bitflight",
@@ -53,6 +66,7 @@ SOURCES = [
         "repo_full_name": "Jamie-BitFlight/claude_skills",
         "allowed_path_globs": ["skills/*/SKILL.md", ".claude/skills/*/SKILL.md"],
         "min_repo_type": "skills_focused",
+        "group": "plugins",
     },
     {
         "id": "hf-skills",
@@ -60,6 +74,7 @@ SOURCES = [
         "repo_full_name": "huggingface/skills",
         "allowed_path_globs": ["skills/*/SKILL.md", ".claude/skills/*/SKILL.md"],
         "min_repo_type": "skills_focused",
+        "group": "plugins",
     },
     {
         "id": "claude-marketplaces-directory",
@@ -72,6 +87,7 @@ SOURCES = [
         # discover canonical `skills/*/SKILL.md` layout from directory sources.
         "allowed_path_globs": ["skills/*/SKILL.md"],
         "min_repo_type": "skills_only",
+        "group": "plugins",
     },
     {
         "id": "skillsforge-directory",
@@ -99,6 +115,65 @@ SOURCES = [
         "max_sitemap_pages": 80,
         "allowed_path_globs": ["skills/*/SKILL.md"],
         "min_repo_type": "skills_only",
+        "group": "plugins",
+    },
+    {
+        "id": "bkit-ai-directory",
+        "type": "web_directory",
+        "url": "https://www.bkit.ai/",
+        "max_repos": 80,
+        # bkit.ai currently doesn't expose a /sitemap.xml; avoid noisy 404 logs.
+        "max_sitemap_pages": 0,
+        "allowed_path_globs": ["skills/*/SKILL.md", ".claude/skills/*/SKILL.md"],
+        "min_repo_type": "skills_only",
+        "group": "plugins",
+    },
+    {
+        "id": "awesome-claude-plugins-awesomejun",
+        "type": "markdown_list",
+        "url": "https://raw.githubusercontent.com/AwesomeJun/awesome-claude-plugins/main/README.md",
+        "max_repos": 80,
+        "allowed_path_globs": ["skills/*/SKILL.md", ".claude/skills/*/SKILL.md"],
+        "min_repo_type": "skills_only",
+        "group": "plugins",
+    },
+    {
+        "id": "awesome-claude-skills-composiohq",
+        "type": "markdown_list",
+        "url": "https://raw.githubusercontent.com/ComposioHQ/awesome-claude-skills/master/README.md",
+        "max_repos": 120,
+        "allowed_path_globs": ["skills/*/SKILL.md", ".claude/skills/*/SKILL.md"],
+        "min_repo_type": "skills_only",
+        "group": "plugins",
+    },
+    {
+        "id": "awesome-claude-skills-voltagent",
+        "type": "markdown_list",
+        "url": "https://raw.githubusercontent.com/VoltAgent/awesome-claude-skills/main/README.md",
+        "max_repos": 120,
+        "allowed_path_globs": ["skills/*/SKILL.md", ".claude/skills/*/SKILL.md"],
+        "min_repo_type": "skills_only",
+        # This list already includes many direct SKILL.md links; repo scanning is expensive and often redundant.
+        "repo_scan_enabled": False,
+        "group": "plugins",
+    },
+    {
+        "id": "awesome-claude-skills-behisecc",
+        "type": "markdown_list",
+        "url": "https://raw.githubusercontent.com/BehiSecc/awesome-claude-skills/main/README.md",
+        "max_repos": 120,
+        "allowed_path_globs": ["skills/*/SKILL.md", ".claude/skills/*/SKILL.md"],
+        "min_repo_type": "skills_only",
+        "group": "plugins",
+    },
+    {
+        "id": "awesome-claude-skills-travisvn",
+        "type": "markdown_list",
+        "url": "https://raw.githubusercontent.com/travisvn/awesome-claude-skills/main/README.md",
+        "max_repos": 120,
+        "allowed_path_globs": ["skills/*/SKILL.md", ".claude/skills/*/SKILL.md"],
+        "min_repo_type": "skills_only",
+        "group": "plugins",
     },
     {
         "id": "github-search-skillmd",
@@ -138,6 +213,45 @@ GITHUB_RESERVED_OWNERS = {
     "apps",
 }
 SITEMAP_LOC_PATTERN = re.compile(r"<loc>\s*([^<\s]+)\s*</loc>", re.IGNORECASE)
+GITHUB_BLOB_URL_PATTERN = re.compile(
+    r"https?://github\.com/(?P<owner>[A-Za-z0-9_.-]+)/(?P<repo>[A-Za-z0-9_.-]+)/blob/(?P<branch>[^/]+)/(?P<path>[^\s#)]+)",
+    re.IGNORECASE,
+)
+
+
+def normalize_to_raw_github_url(url: str) -> str:
+    """Convert github.com blob URLs to raw.githubusercontent.com URLs (best effort)."""
+    raw = (url or "").strip()
+    if not raw:
+        return raw
+    if "raw.githubusercontent.com" in raw:
+        return raw
+    m = GITHUB_BLOB_URL_PATTERN.match(raw)
+    if not m:
+        return raw
+    owner = m.group("owner")
+    repo = m.group("repo")
+    branch = m.group("branch")
+    path = m.group("path")
+    return f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}"
+
+
+def extract_skill_md_urls_from_markdown(content: str) -> list[str]:
+    """Extract direct SKILL.md URLs from markdown, preferring raw URLs for fetching."""
+    urls: set[str] = set()
+    if not content:
+        return []
+
+    for match in re.finditer(r"https?://[^\s)]+", content):
+        url = match.group(0).rstrip(").,;\"'<>")
+        lowered = url.lower()
+        if not lowered.endswith("/skill.md"):
+            continue
+        if "github.com/" in lowered and "/blob/" in lowered:
+            urls.add(normalize_to_raw_github_url(url))
+            continue
+        urls.add(url)
+    return sorted(urls)
 
 
 def _normalize_repo_full_name(owner: str, repo: str) -> Optional[str]:
@@ -161,6 +275,11 @@ def extract_github_repos_from_web_directory(content: str) -> list[str]:
         if normalized:
             repos.add(normalized)
     return sorted(repos)
+
+
+def extract_github_repos_from_markdown(content: str) -> list[str]:
+    """Extract GitHub repos from markdown lists (same matcher as HTML)."""
+    return extract_github_repos_from_web_directory(content)
 
 
 def extract_urls_from_sitemap_xml(content: str) -> list[str]:
@@ -337,7 +456,7 @@ async def fetch_source_content(source: dict[str, Any]) -> Optional[str]:
     return await fetch_text(source["url"])
 
 
-async def run_ingest_sources(progress=None):
+async def run_ingest_sources(progress=None, source_ids: Optional[list[str]] = None):
     """Fetch all configured sources.
 
     If provided, `progress` is called with a dict payload describing the current stage.
@@ -354,12 +473,20 @@ async def run_ingest_sources(progress=None):
             # Observability must never break ingestion.
             return
 
+    requested_ids: set[str] = set()
+    if source_ids:
+        requested_ids = {str(s).strip() for s in source_ids if str(s).strip()}
+
+    sources_to_run = SOURCES
+    if requested_ids:
+        sources_to_run = [s for s in SOURCES if str(s.get("id", "")).strip() in requested_ids]
+
     client = await get_http_client()
     results = []
     scanned_repos: set[str] = set()
-    
-    source_total = len(SOURCES)
-    for idx, source in enumerate(SOURCES, start=1):
+
+    source_total = len(sources_to_run)
+    for idx, source in enumerate(sources_to_run, start=1):
         source_type = source.get("type", "markdown_list")
         source_id = source["id"]
         await _emit(
@@ -371,6 +498,156 @@ async def run_ingest_sources(progress=None):
                 "ingest_source_total": source_total,
             }
         )
+
+        if source_type == "markdown_list":
+            list_url = str(source.get("url", "")).strip()
+            await _emit(
+                {
+                    "phase": "ingest_fetch_url",
+                    "ingest_source_id": source_id,
+                    "ingest_source_type": source_type,
+                    "ingest_source_index": idx,
+                    "ingest_source_total": source_total,
+                    "ingest_url": list_url,
+                }
+            )
+            content = await fetch_text(list_url, client)
+            if not content:
+                continue
+
+            # 1) Direct SKILL.md URLs in the list (fast path, avoids repo scanning).
+            direct_skill_urls = extract_skill_md_urls_from_markdown(content)
+            for skill_url in direct_skill_urls:
+                skill_content = await fetch_text(skill_url, client)
+                if not skill_content:
+                    continue
+                results.append(
+                    {
+                        "source_id": source_id,
+                        "content": skill_content,
+                        "url": skill_url,
+                        "external_id": skill_url,
+                        "source_type": "skill_md",
+                        "discovered_from": f"markdown_list:{source_id}:direct",
+                    }
+                )
+
+            repo_scan_enabled = bool(source.get("repo_scan_enabled", True))
+            if not repo_scan_enabled:
+                await _emit(
+                    {
+                        "phase": "ingest_source_done",
+                        "ingest_source_id": source_id,
+                        "ingest_source_type": source_type,
+                        "ingest_source_index": idx,
+                        "ingest_source_total": source_total,
+                        "ingest_discovered_repos": 0,
+                    }
+                )
+                continue
+
+            # Discover repos from the list (or use explicit overrides when provided).
+            override_repos = source.get("repo_full_names")
+            if isinstance(override_repos, list) and override_repos:
+                repos = [str(r).strip() for r in override_repos if str(r).strip()]
+            else:
+                repos = extract_github_repos_from_markdown(content)
+
+            max_repos = int(source.get("max_repos", 60))
+            allowed_path_globs = source.get("allowed_path_globs") or ["skills/*/SKILL.md", ".claude/skills/*/SKILL.md"]
+            min_repo_type = str(source.get("min_repo_type", "skills_only"))
+            max_skill_files_per_repo = int(source.get("max_skill_files_per_repo", 200))
+
+            discovered_count = 0
+            await _emit(
+                {
+                    "phase": "ingest_discover_repos",
+                    "ingest_source_id": source_id,
+                    "ingest_source_type": source_type,
+                    "ingest_source_index": idx,
+                    "ingest_source_total": source_total,
+                    "ingest_discovered_repos": min(len(repos), max_repos),
+                }
+            )
+
+            for repo_full_name in repos:
+                if discovered_count >= max_repos:
+                    break
+                if repo_full_name.lower() in scanned_repos:
+                    continue
+                scanned_repos.add(repo_full_name.lower())
+                discovered_count += 1
+
+                await _emit(
+                    {
+                        "phase": "ingest_scan_repo",
+                        "ingest_source_id": source_id,
+                        "ingest_source_type": source_type,
+                        "ingest_source_index": idx,
+                        "ingest_source_total": source_total,
+                        "ingest_repo_full_name": repo_full_name,
+                        "ingest_discovered_repo_index": discovered_count,
+                        "ingest_discovered_repo_total": min(len(repos), max_repos),
+                    }
+                )
+
+                try:
+                    candidates = await list_repo_skills_candidates(
+                        repo_full_name,
+                        allowed_path_globs=allowed_path_globs,
+                        min_repo_type=min_repo_type,
+                    )
+                except Exception as exc:
+                    await _emit(
+                        {
+                            "phase": "ingest_source_error",
+                            "ingest_source_id": source_id,
+                            "ingest_source_type": source_type,
+                            "ingest_source_index": idx,
+                            "ingest_source_total": source_total,
+                            "ingest_repo_full_name": repo_full_name,
+                            "ingest_last_source_error": str(exc),
+                        }
+                    )
+                    continue
+
+                for candidate in candidates[:max_skill_files_per_repo]:
+                    skill_url = candidate.get("url")
+                    if not skill_url:
+                        continue
+                    skill_content = await fetch_text(skill_url, client)
+                    if not skill_content:
+                        continue
+                    results.append(
+                        {
+                            "source_id": source_id,
+                            "content": skill_content,
+                            "url": skill_url,
+                            "external_id": skill_url,
+                            "source_type": "skill_md",
+                            "repo_full_name": repo_full_name,
+                            "skill_path": candidate.get("path"),
+                            "skill_sha": candidate.get("sha"),
+                            "discovered_from": f"markdown_list:{source_id}",
+                            "repo_type": candidate.get("repo_type"),
+                            "repo_intent_score": candidate.get("repo_intent_score"),
+                            "repo_total_files": candidate.get("repo_total_files"),
+                            "repo_skill_files": candidate.get("repo_skill_files"),
+                            "repo_canonical_skill_files": candidate.get("repo_canonical_skill_files"),
+                        }
+                    )
+
+            await _emit(
+                {
+                    "phase": "ingest_source_done",
+                    "ingest_source_id": source_id,
+                    "ingest_source_type": source_type,
+                    "ingest_source_index": idx,
+                    "ingest_source_total": source_total,
+                    "ingest_discovered_repos": discovered_count,
+                }
+            )
+            continue
 
         if source_type == "github_repo":
             repo_full_name = source["repo_full_name"]

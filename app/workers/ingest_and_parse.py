@@ -17,6 +17,8 @@ from app.parsers.skillmd_parser import parse_skill_md
 from app.quality.skill_quality import validate_skill_md
 from app.quality.claude_skill_spec import validate_claude_skill_frontmatter
 from app.llm.glm_client import summarize_skill_overview, summarize_skill_detail_overview
+from app.quality.security_scan import heuristic_security_scan
+from app.llm.glm_client import classify_skill_security
 from app.settings import get_settings
 from app.repos.system_setting_repo import _get_skill_validation_settings_value
 from app.repos.system_setting_repo import get_worker_status_value, set_worker_status_value
@@ -498,11 +500,11 @@ def extract_skill_candidates_from_markdown(content: str) -> list[dict[str, str]]
 
     return candidates
 
-async def ingest_raw(db: AsyncSession) -> int:
+async def ingest_raw(db: AsyncSession, source_ids: Optional[list[str]] = None) -> int:
     """Fetch from sources and upsert raw skills."""
     await _patch_worker_status({"phase": "ingest_fetch_sources"})
     print("Fetching sources...")
-    results = await run_ingest_sources(progress=_patch_worker_status)
+    results = await run_ingest_sources(progress=_patch_worker_status, source_ids=source_ids)
     await _patch_worker_status({"phase": "ingest_upsert_raw", "ingest_results": int(len(results))})
     
     count = 0
@@ -677,13 +679,117 @@ async def parse_queued_raw_skills(db: AsyncSession) -> dict:
                 description = derive_skill_description(metadata, body)
                 tag_slugs = _extract_tag_slugs(metadata)
 
+                # Security scan: block obvious hacking / malicious instructions.
+                # This is enforced during parsing so "bad" SKILL.md never becomes a Skill row.
+                security_enabled = bool(getattr(settings, "security_scan_enabled", True))
+                security_enforce = bool(getattr(settings, "security_scan_enforce", True))
+                security_threshold = float(getattr(settings, "security_scan_confidence_threshold", 0.7) or 0.7)
+                glm_on_suspicion_only = bool(
+                    getattr(settings, "security_scan_glm_on_suspicion_only", True)
+                )
+
+                security_input_text = "\n".join([name or "", description or "", body or ""])
+                heuristic = heuristic_security_scan(
+                    name=name or "",
+                    description=description or "",
+                    content=security_input_text,
+                    url=canonical_url,
+                )
+
+                glm_result = None
+                if security_enabled and (not glm_on_suspicion_only or heuristic.block):
+                    glm_result = await classify_skill_security(
+                        name=name or "",
+                        description=description or "",
+                        content=body or "",
+                        url=canonical_url,
+                    )
+
+                # Merge decision: heuristic is hard-block for critical, GLM can confirm/override.
+                block = False
+                block_reasons: list[str] = []
+                block_indicators: list[str] = []
+                block_severity = "low"
+                block_confidence = 0.0
+
+                if heuristic.block:
+                    block = True
+                    block_severity = heuristic.severity
+                    block_confidence = heuristic.confidence
+                    block_reasons.extend(heuristic.reasons)
+                    block_indicators.extend(heuristic.indicators)
+
+                if isinstance(glm_result, dict):
+                    glm_block = bool(glm_result.get("block"))
+                    glm_conf = glm_result.get("confidence")
+                    try:
+                        glm_conf_f = float(glm_conf) if glm_conf is not None else 0.0
+                    except Exception:
+                        glm_conf_f = 0.0
+                    glm_sev = str(glm_result.get("severity") or "").strip().lower() or "low"
+                    glm_reasons = glm_result.get("reasons") if isinstance(glm_result.get("reasons"), list) else []
+                    glm_inds = glm_result.get("indicators") if isinstance(glm_result.get("indicators"), list) else []
+
+                    if glm_block and glm_conf_f >= security_threshold:
+                        block = True
+                        block_severity = glm_sev
+                        block_confidence = max(block_confidence, glm_conf_f)
+                        block_reasons.extend([str(r) for r in glm_reasons if str(r).strip()])
+                        block_indicators.extend([str(i) for i in glm_inds if str(i).strip()])
+                    elif not glm_block and heuristic.severity != "critical":
+                        # Allow GLM to downgrade non-critical heuristic hits (reduce false positives).
+                        block = False
+
+                ingest_meta = raw.parsed_data if isinstance(raw.parsed_data, dict) else {}
+                ingest_meta = {
+                    **ingest_meta,
+                    "security_scan": {
+                        "heuristic": {
+                            "ok": heuristic.ok,
+                            "severity": heuristic.severity,
+                            "confidence": heuristic.confidence,
+                            "reasons": heuristic.reasons,
+                            "indicators": heuristic.indicators,
+                            "content_sha1": heuristic.content_sha1,
+                        },
+                        "glm": glm_result,
+                        "decision": {
+                            "block": bool(block),
+                            "severity": block_severity,
+                            "confidence": float(block_confidence),
+                            "reasons": sorted({r.strip() for r in block_reasons if str(r).strip()}),
+                            "indicators": sorted({i.strip() for i in block_indicators if str(i).strip()}),
+                        },
+                    },
+                }
+
+                if security_enabled and security_enforce and block:
+                    raw.parsed_data = {
+                        **ingest_meta,
+                        "source_type": "skill_md",
+                        "name": name,
+                        "reason": "security_block",
+                    }
+                    raw.parse_status = "error"
+                    raw.parse_error = {
+                        "type": "security",
+                        "severity": block_severity,
+                        "confidence": float(block_confidence),
+                        "errors": sorted({r.strip() for r in block_reasons if str(r).strip()}),
+                        "indicators": sorted({i.strip() for i in block_indicators if str(i).strip()}),
+                    }
+                    await db.flush()
+                    errors += 1
+                    continue
+
                 quality = validate_skill_md(
                     metadata=metadata,
                     body=body,
                     frontmatter_raw=frontmatter_raw,
                     frontmatter_error=frontmatter_error,
                 )
-                ingest_meta = raw.parsed_data if isinstance(raw.parsed_data, dict) else {}
+                # ingest_meta already merged with security scan above
+                ingest_meta = ingest_meta if isinstance(ingest_meta, dict) else {}
 
                 # Store spec validation output for admin review / gradual rollout.
                 ingest_meta = {
@@ -1158,10 +1264,10 @@ async def backfill_missing_specs_from_raw_frontmatter(db: AsyncSession, *, limit
     return updated
 
 
-async def run():
+async def run(source_ids: Optional[list[str]] = None):
     """Run ingest and parse workflow."""
     async with AsyncSessionLocal() as db:
-        ingested = await ingest_raw(db)
+        ingested = await ingest_raw(db, source_ids=source_ids)
         parse_stats = await parse_queued_raw_skills(db)
         try:
             # Faster convergence: fill existing rows in a few cycles, then this becomes a no-op.

@@ -174,6 +174,17 @@ async def main():
                     }
                 )
 
+                # Even when crawl/ingest is OFF, we can still backfill GLM-generated summaries
+                # for existing Skills in small batches. This avoids the common "GLM never runs"
+                # perception when ingest is paused.
+                try:
+                    await _patch_worker_status({"phase": "glm_backfill_summaries"})
+                    async with AsyncSessionLocal() as db:
+                        await ingest_and_parse.backfill_missing_summaries(db, limit=10)
+                        await ingest_and_parse.backfill_missing_detail_overviews(db, limit=5)
+                except Exception as e:
+                    await _patch_worker_status({"phase": "glm_backfill_error", "last_error": str(e)})
+
             await _patch_worker_status({"phase": "compute_popularity"})
             await compute_popularity.run()
             await _patch_worker_status({"phase": "build_rank_snapshots"})

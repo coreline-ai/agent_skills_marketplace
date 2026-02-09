@@ -1,0 +1,47 @@
+services:
+  # 1. API Service (FastAPI)
+  - type: web
+    name: skills-marketplace-api
+    env: docker
+    dockerContext: .
+    dockerfilePath: Dockerfile.api
+    plan: free # Free tier available
+    envVars:
+      - key: DATABASE_URL
+        sync: false # User will provide this from Supabase
+      - key: SECRET_KEY
+        generateValue: true # Render will generate a random string
+      - key: PORT
+        value: 8000
+    healthCheckPath: /health
+
+  # 2. Background Worker (Python)
+  - type: worker
+    name: skills-marketplace-worker
+    env: docker
+    dockerContext: .
+    dockerfilePath: Dockerfile.api
+    dockerCommand: python -m app.workers.run_all
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromService:
+          type: web
+          name: skills-marketplace-api
+          property: envVar:DATABASE_URL
+
+  # 3. Web Frontend (Next.js)
+  - type: web
+    name: skills-marketplace-web
+    env: docker
+    dockerContext: ./web
+    dockerfilePath: Dockerfile
+    plan: free
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: skills-marketplace-api
+          property: host
+      - key: PORT
+        value: 3000

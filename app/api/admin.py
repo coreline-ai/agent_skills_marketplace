@@ -333,10 +333,35 @@ from app.workers import ingest_and_parse
 async def trigger_ingest(
     background_tasks: BackgroundTasks,
     current_user: Annotated[dict, Depends(require_admin)],
+    source_id: Optional[str] = Query(
+        default=None,
+        description="If provided, ingest only this configured source id.",
+    ),
+    source_ids: Optional[list[str]] = Query(
+        default=None,
+        description="If provided, ingest only these configured source ids (repeat the param).",
+    ),
 ):
     """Trigger background ingestion."""
+    if source_ids:
+        normalized_ids = [str(s).strip() for s in source_ids if str(s).strip()]
+        if normalized_ids:
+            valid_ids = {str(s.get("id", "")).strip() for s in SOURCES if str(s.get("id", "")).strip()}
+            unknown = [sid for sid in normalized_ids if sid not in valid_ids]
+            if unknown:
+                raise HTTPException(status_code=404, detail=f"Unknown source_ids: {unknown}")
+            background_tasks.add_task(ingest_and_parse.run, source_ids=normalized_ids)
+            return {"status": "ingestion started", "source_ids": normalized_ids}
+
+    if source_id and source_id.strip():
+        normalized = source_id.strip()
+        valid_ids = {str(s.get("id", "")).strip() for s in SOURCES if str(s.get("id", "")).strip()}
+        if normalized not in valid_ids:
+            raise HTTPException(status_code=404, detail=f"Unknown source_id: {normalized}")
+        background_tasks.add_task(ingest_and_parse.run, source_ids=[normalized])
+        return {"status": "ingestion started", "source_id": normalized}
     background_tasks.add_task(ingest_and_parse.run)
-    return {"status": "ingestion started"}
+    return {"status": "ingestion started", "source_id": None}
 
 
 @router.get("/crawl-sources", response_model=list[dict])
@@ -417,6 +442,26 @@ async def list_crawl_sources(
                     },
                 }
             )
+
+        if source_type == "markdown_list":
+            list_url = str(source.get("url", "")).strip()
+            if not list_url:
+                continue
+            items.append(
+                {
+                    "id": source.get("id"),
+                    "source_type": "markdown_list",
+                    "repo_full_name": None,
+                    "url": list_url,
+                    "policy": {
+                        "min_repo_type": source.get("min_repo_type", "skills_only"),
+                        "max_repos": source.get("max_repos"),
+                        "allowed_path_globs": source.get("allowed_path_globs") or [],
+                        "repo_scan_enabled": bool(source.get("repo_scan_enabled", True)),
+                    },
+                }
+            )
+            continue
 
     def _sort_key(item: dict) -> tuple[str, str]:
         return (

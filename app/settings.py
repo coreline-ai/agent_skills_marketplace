@@ -32,7 +32,21 @@ class Settings(BaseSettings):
     glm_chat_completions_url: str = Field(default="", validation_alias=AliasChoices("GLM_CHAT_COMPLETIONS_URL"))
     glm_model: str = Field(default="glm-4", validation_alias=AliasChoices("GLM_MODEL"))
     glm_temperature: float = Field(default=0.2, validation_alias=AliasChoices("GLM_TEMPERATURE"))
-    glm_timeout_seconds: int = Field(default=30, validation_alias=AliasChoices("GLM_TIMEOUT_SECONDS"))
+    glm_timeout_seconds: int = Field(default=60, validation_alias=AliasChoices("GLM_TIMEOUT_SECONDS"))
+
+    # Security scan (SKILL.md content)
+    # - enabled: run scan during parsing
+    # - enforce: block/quarantine when flagged
+    security_scan_enabled: bool = Field(default=True, validation_alias=AliasChoices("SECURITY_SCAN_ENABLED"))
+    security_scan_enforce: bool = Field(default=True, validation_alias=AliasChoices("SECURITY_SCAN_ENFORCE"))
+    # Run GLM security classification only when heuristic scan finds suspicious signals.
+    security_scan_glm_on_suspicion_only: bool = Field(
+        default=True, validation_alias=AliasChoices("SECURITY_SCAN_GLM_ON_SUSPICION_ONLY")
+    )
+    security_scan_confidence_threshold: float = Field(
+        default=0.7, validation_alias=AliasChoices("SECURITY_SCAN_CONFIDENCE_THRESHOLD")
+    )
+    security_scan_max_chars: int = Field(default=6000, validation_alias=AliasChoices("SECURITY_SCAN_MAX_CHARS"))
 
     # CORS
     cors_origins: str = "http://localhost:3000,http://localhost:3001"

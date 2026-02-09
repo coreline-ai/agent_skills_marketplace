@@ -198,7 +198,7 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
                                         href={installUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-full font-bold shadow-md hover:bg-blue-700 hover:shadow-lg transition-all"
+                                        className="inline-flex items-center gap-2 px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-full font-bold shadow-md hover:bg-gray-800 dark:hover:bg-zinc-200 hover:shadow-lg transition-all"
                                     >
                                         <ExternalLink className="w-4 h-4" />
                                         View Documentation

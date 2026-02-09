@@ -41,7 +41,8 @@ export default async function RankingsPage() {
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-card rounded-[24px] border border-gray-100 dark:border-white/10 shadow-soft overflow-hidden">
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-white dark:bg-card rounded-[24px] border border-gray-100 dark:border-white/10 shadow-soft overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
@@ -54,7 +55,7 @@ export default async function RankingsPage() {
                                 <th className="px-6 py-4 font-bold text-right">Action</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody className="divide-y divide-gray-50/50 dark:divide-white/5">
                             {rankings.length > 0 ? (
                                 rankings.map((item, idx) => (
                                     <tr key={item.skill_id} className="group hover:bg-gray-50/80 dark:hover:bg-white/5 transition-colors duration-200">
@@ -115,6 +116,64 @@ export default async function RankingsPage() {
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+                {rankings.length > 0 ? (
+                    rankings.map((item, idx) => (
+                        <div key={item.skill_id} className="bg-white dark:bg-card rounded-2xl p-5 border border-gray-100 dark:border-white/10 shadow-sm relative">
+                            <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center gap-3 w-full">
+                                    <div className={`flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${idx < 3
+                                        ? 'bg-black text-white dark:bg-white dark:text-black shadow-md'
+                                        : 'bg-gray-100 text-gray-500 dark:bg-zinc-800/50 dark:text-zinc-500'}`}>
+                                        {idx + 1}
+                                    </div>
+                                    <Link href={`/skills/${item.skill_id}`} className="block min-w-0 flex-1">
+                                        <span className="font-bold text-gray-900 dark:text-white line-clamp-1 text-lg">{item.name}</span>
+                                        <span className="text-xs text-gray-400 dark:text-zinc-500 font-mono block truncate">{item.slug}</span>
+                                    </Link>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-white/5">
+                                <div className="flex flex-col items-center flex-1">
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Score</span>
+                                    <span className="font-bold text-gray-900 dark:text-white tabular-nums">{item.score.toFixed(1)}</span>
+                                </div>
+                                <div className="w-px h-8 bg-gray-200 dark:bg-white/10" />
+                                <div className="flex flex-col items-center flex-1">
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Stars</span>
+                                    <div className="flex items-center gap-1">
+                                        <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+                                        <span className="font-bold text-gray-900 dark:text-white tabular-nums">{item.stars}</span>
+                                    </div>
+                                </div>
+                                <div className="w-px h-8 bg-gray-200 dark:bg-white/10" />
+                                <div className="flex flex-col items-center flex-1">
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Views</span>
+                                    <div className="flex items-center gap-1">
+                                        <Eye className="w-3.5 h-3.5 text-blue-500" />
+                                        <span className="font-bold text-gray-900 dark:text-white tabular-nums">{item.views}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <Link
+                                href={`/skills/${item.skill_id}`}
+                                className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-bold text-sm shadow-sm active:scale-[0.98] transition-all"
+                            >
+                                View Details <ArrowRight className="w-4 h-4" />
+                            </Link>
+                        </div>
+                    ))
+                ) : (
+                    <div className="text-center py-12 text-gray-500 bg-white dark:bg-card rounded-2xl border border-gray-100 dark:border-white/10">
+                        <Trophy className="w-12 h-12 mx-auto opacity-20 mb-3" />
+                        <p>No ranking data available yet.</p>
+                    </div>
+                )}
             </div>
         </div>
     );

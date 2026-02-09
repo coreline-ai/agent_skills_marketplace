@@ -5,7 +5,7 @@ export const metadata = {
 
 export default function GuidePage() {
   return (
-    <div className="space-y-8 pb-20 max-w-4xl">
+    <div className="space-y-8 pb-20 max-w-6xl">
       <header className="space-y-4 border-b border-gray-100 dark:border-white/5 pb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">User Guide</h1>
         <p className="text-base text-gray-600 dark:text-zinc-400 max-w-2xl leading-relaxed font-medium">

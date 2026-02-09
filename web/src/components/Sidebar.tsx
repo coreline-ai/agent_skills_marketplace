@@ -2,20 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Home, Compass, BarChart2, FolderKanban, ShieldCheck, Settings, ChevronDown, BookOpen } from "lucide-react";
+import { useState } from "react";
+import { Home, Compass, BarChart2, FolderKanban, ShieldCheck, Settings, ChevronDown, BookOpen, Globe, Puzzle, Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useTheme } from "next-themes";
 
 export function Sidebar() {
     const pathname = usePathname();
-    const { resolvedTheme } = useTheme();
-    const [mounted, setMounted] = useState(false);
-
-    // next-themes resolves theme client-side; avoid rendering theme-dependent text during SSR to prevent hydration mismatch.
-    useEffect(() => {
-        setMounted(true);
-    }, []);
+    const [mobileOpen, setMobileOpen] = useState(false);
 
     // Hide sidebar on admin pages EXCEPT login (admin has its own layout after login)
     const isAdminButNotLogin = pathname?.startsWith("/admin") && pathname !== "/admin/login";
@@ -29,6 +22,7 @@ export function Sidebar() {
                 { name: "Skills Library", href: "/skills", icon: Compass },
                 { name: "Skill Packs", href: "/packs", icon: FolderKanban },
                 { name: "Rankings", href: "/rankings", icon: BarChart2 },
+                { name: "Plugins", href: "/plugins", icon: Puzzle },
                 { name: "User Guide", href: "/guide", icon: BookOpen },
             ]
         },
@@ -41,15 +35,30 @@ export function Sidebar() {
         }
     ];
 
-    return (
-        <aside className="bg-sidebar border-r border-border min-h-full flex flex-col flex-shrink-0 w-[280px] hidden md:flex transition-all duration-300" data-purpose="sidebar">
+    const sidebarInner = (
+        <>
             <div className="h-20 flex items-center px-6 border-b border-sidebar">
-                <a href="https://coreline-project.vercel.app/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3">
-                    <img
-                        src="/coreline_logo.png"
-                        alt="Coreline AI Logo"
-                        className="w-8 h-8 rounded-xl shadow-sm"
-                    />
+                <a
+                    href="https://coreline-project.vercel.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 group"
+                >
+                    <div className="relative w-8 h-8 overflow-hidden rounded-xl shadow-sm bg-gray-100 dark:bg-white/5">
+                        <img
+                            src="/coreline_logo.png"
+                            alt="Coreline AI Logo"
+                            className="w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-0"
+                        />
+                        <video
+                            src="/coreline_public_robot.mp4"
+                            className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10"
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                        />
+                    </div>
                     <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
                         CORELINE <span className="text-accent">AI</span>
                     </span>
@@ -78,6 +87,7 @@ export function Sidebar() {
                                         {item.href ? (
                                             <Link
                                                 href={item.href}
+                                                onClick={() => setMobileOpen(false)}
                                                 className={`flex items-center gap-3 px-3 py-2.5 rounded-[8px] transition-all group ${isActive
                                                     ? "bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm border border-gray-100 dark:border-white/10"
                                                     : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/5 hover:shadow-sm"
@@ -106,7 +116,7 @@ export function Sidebar() {
 
                 <div className="flex justify-between items-center px-2">
                     <span className="text-sm text-gray-500 font-medium">
-                        {mounted ? (resolvedTheme === "dark" ? "White Mode" : "Dark Mode") : "Theme"}
+                        Theme
                     </span>
                     <div className="scale-90 origin-right">
                         <ThemeToggle />
@@ -124,6 +134,54 @@ export function Sidebar() {
                     <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
                 </div>
             </div>
-        </aside>
+        </>
+    );
+
+    return (
+        <>
+            {/* Mobile: hamburger to open drawer (sidebar is otherwise hidden via `hidden md:flex`). */}
+            <button
+                type="button"
+                onClick={() => setMobileOpen(true)}
+                className="md:hidden fixed top-4 left-4 z-[60] inline-flex items-center justify-center w-11 h-11 rounded-xl bg-white/90 dark:bg-black/70 backdrop-blur border border-border shadow-soft hover:shadow-hover transition-all"
+                aria-label="Open navigation"
+            >
+                <Menu className="w-5 h-5 text-gray-900 dark:text-white" />
+            </button>
+
+            {/* Mobile drawer */}
+            {mobileOpen && (
+                <div className="md:hidden fixed inset-0 z-50" role="dialog" aria-modal="true">
+                    <button
+                        type="button"
+                        className="absolute inset-0 bg-black/30 backdrop-blur-[1px]"
+                        aria-label="Close navigation"
+                        onClick={() => setMobileOpen(false)}
+                    />
+                    <aside
+                        className="absolute left-0 top-0 h-full w-[280px] max-w-[85vw] bg-sidebar border-r border-border flex flex-col shadow-2xl"
+                        data-purpose="sidebar-mobile"
+                    >
+                        <div className="h-14 flex items-center justify-between px-4 border-b border-sidebar">
+                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Menu</span>
+                            <button
+                                type="button"
+                                onClick={() => setMobileOpen(false)}
+                                className="inline-flex items-center justify-center w-9 h-9 rounded-lg hover:bg-white/60 dark:hover:bg-white/5 transition-colors"
+                                aria-label="Close navigation"
+                            >
+                                <X className="w-4 h-4 text-gray-700 dark:text-gray-200" />
+                            </button>
+                        </div>
+                        {sidebarInner}
+                    </aside>
+                </div>
+            )}
+
+            {/* Desktop sidebar */}
+            <aside className="bg-sidebar border-r border-border min-h-full flex-col flex-shrink-0 w-[280px] hidden md:flex transition-all duration-300" data-purpose="sidebar">
+                {sidebarInner}
+            </aside>
+        </>
     );
 }

@@ -2,11 +2,12 @@
 
 from fastapi import APIRouter
 
-from app.api import skills, packs, taxonomy, rankings, events
+from app.api import skills, packs, taxonomy, rankings, events, plugins
 
 api_router = APIRouter()
 
 api_router.include_router(skills.router, prefix="/skills", tags=["Skills"])
+api_router.include_router(plugins.router, prefix="/plugins", tags=["Plugins"])
 api_router.include_router(packs.router, prefix="/packs", tags=["Packs"])
 api_router.include_router(taxonomy.router, tags=["Taxonomy"])
 api_router.include_router(rankings.router, prefix="/rankings", tags=["Rankings"])
