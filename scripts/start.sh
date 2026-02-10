@@ -42,8 +42,14 @@ except Exception as e:
 EOF
 
 # Run database migrations
+# Run database migrations
 echo "Running alembic migrations..."
-alembic upgrade head
+if alembic upgrade head; then
+    echo "Migration successful!"
+else
+    echo "Migration failed!"
+    exit 1
+fi
 
 # Start background worker in the background
 echo "Starting background worker..."
