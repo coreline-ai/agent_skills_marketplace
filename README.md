@@ -7,6 +7,9 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-green.svg)](https://fastapi.tiangolo.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-16+-black.svg)](https://nextjs.org/)
 [![Docker](https://img.shields.io/badge/Docker-Supported-blue.svg)](https://www.docker.com/)
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-skills--marketplace-brightgreen)](https://skills-marketplace-web-3a6p.onrender.com/)
+
+> 🌐 **[라이브 데모 바로가기 →](https://skills-marketplace-web-3a6p.onrender.com/)**
 
 AI Agent Skills Marketplace는 전 세계에 흩어진 **SKILL.md**를 한곳에 모아 관리하는 플랫폼입니다.
 
