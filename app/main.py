@@ -2,8 +2,10 @@
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+import traceback
 
 from app.settings import get_settings
 
@@ -44,6 +46,17 @@ def create_app() -> FastAPI:
     # API Router
     from app.api.router import api_router
     app.include_router(api_router, prefix="/api")
+
+    @app.exception_handler(500)
+    async def internal_exception_handler(request: Request, exc: Exception):
+        return JSONResponse(
+            status_code=500,
+            content={
+                "message": "Internal Server Error",
+                "detail": str(exc),
+                "traceback": traceback.format_exc()
+            },
+        )
 
     return app
 
