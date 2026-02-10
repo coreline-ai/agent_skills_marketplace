@@ -1,38 +1,27 @@
 services:
-  # 1. API Service (FastAPI)
+  # 1. API & Worker Service (Combined for Free Tier)
   - type: web
     name: skills-marketplace-api
     env: docker
     dockerContext: .
     dockerfilePath: Dockerfile.api
-    dockerCommand: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    # Run migrations, then background worker, then the API
+    dockerCommand: sh -c "alembic upgrade head && (python -m app.workers.run_all &) && uvicorn app.main:app --host 0.0.0.0 --port 8000"
     plan: free
     envVars:
       - key: DATABASE_URL
-        sync: false # Provide Supabase Connection String
+        sync: false
       - key: ADMIN_USERNAME
         value: admin
       - key: ADMIN_PASSWORD_HASH
-        sync: false # Provide the bcrypt hash
+        sync: false
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: PORT
         value: 8000
     healthCheckPath: /health
 
-  # 2. Background Worker (Python)
-  - type: worker
-    name: skills-marketplace-worker
-    env: docker
-    dockerContext: .
-    dockerfilePath: Dockerfile.api
-    dockerCommand: python -m app.workers.run_all
-    plan: free
-    envVars:
-      - key: DATABASE_URL
-        sync: false # Provide the same Supabase URL here
-
-  # 3. Web Frontend (Next.js)
+  # 2. Web Frontend (Next.js)
   - type: web
     name: skills-marketplace-web
     env: docker
@@ -47,4 +36,5 @@ services:
           property: host
       - key: PORT
         value: 3000
+
 
