@@ -58,7 +58,7 @@ class Settings(BaseSettings):
     # - profile: "lax" (default) logs warnings but only hard failures become errors
     # - profile: "strict" elevates more spec issues to errors
     skill_validation_profile: str = "lax"
-    skill_validation_enforce: bool = False
+    skill_validation_enforce: bool = True
 
     @field_validator("admin_password_hash", mode="before")
     @classmethod

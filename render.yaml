@@ -13,6 +13,7 @@ services:
         generateValue: true # Render will generate a random string
       - key: PORT
         value: 8000
+    preDeployCommand: alembic upgrade head
     healthCheckPath: /health
 
   # 2. Background Worker (Python)
