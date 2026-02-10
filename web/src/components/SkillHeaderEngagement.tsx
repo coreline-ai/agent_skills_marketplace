@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Download, Eye, Share2, Star } from "lucide-react";
-import { api } from "@/app/lib/api";
+import { api } from "@/lib/api";
 
 interface SkillHeaderEngagementProps {
     skillId: string;

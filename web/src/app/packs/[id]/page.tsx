@@ -1,4 +1,4 @@
-import { api } from "@/app/lib/api";
+import { api } from "@/lib/api";
 import { SkillCard } from "@/components/SkillCard";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";

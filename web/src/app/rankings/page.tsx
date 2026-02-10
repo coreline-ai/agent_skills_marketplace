@@ -1,4 +1,4 @@
-import { api } from "@/app/lib/api";
+import { api } from "@/lib/api";
 import Link from "next/link";
 import { Star, Eye, Trophy, ArrowRight } from "lucide-react";
 

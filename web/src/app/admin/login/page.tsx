@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api, ApiError } from "@/app/lib/api";
-import { clearAdminSession, getAdminToken, setAdminToken } from "@/app/lib/admin-auth";
+import { api, ApiError } from "@/lib/api";
+import { clearAdminSession, getAdminToken, setAdminToken } from "@/lib/admin-auth";
 import { Lock, User } from "lucide-react";
 
 export default function AdminLoginPage() {

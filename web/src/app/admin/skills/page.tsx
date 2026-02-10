@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { Check, X } from "lucide-react";
-import { api, ApiError } from "@/app/lib/api";
-import { clearAdminSession, getAdminToken } from "@/app/lib/admin-auth";
+import { api, ApiError } from "@/lib/api";
+import { clearAdminSession, getAdminToken } from "@/lib/admin-auth";
 
 interface RawSkillListItem {
     id: string;
@@ -81,25 +81,22 @@ export default function AdminSkillsPage() {
                 <div className="flex gap-2">
                     <button
                         onClick={() => router.push("/admin/skills?status=pending")}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
-                            status === "pending" ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                        }`}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${status === "pending" ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                            }`}
                     >
                         pending{counts ? ` (${counts.pending})` : ""}
                     </button>
                     <button
                         onClick={() => router.push("/admin/skills?status=processed")}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
-                            status === "processed" ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                        }`}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${status === "processed" ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                            }`}
                     >
                         processed{counts ? ` (${counts.processed})` : ""}
                     </button>
                     <button
                         onClick={() => router.push("/admin/skills?status=error")}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
-                            status === "error" ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                        }`}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${status === "error" ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                            }`}
                     >
                         error{counts ? ` (${counts.error})` : ""}
                     </button>

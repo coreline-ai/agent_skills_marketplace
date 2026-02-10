@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api, ApiError } from "@/app/lib/api";
+import { api, ApiError } from "@/lib/api";
 import Link from "next/link";
 import { ArrowUpRight, CheckCircle, Clock, AlertCircle, RefreshCw, ExternalLink } from "lucide-react";
-import { clearAdminSession, getAdminToken } from "@/app/lib/admin-auth";
+import { clearAdminSession, getAdminToken } from "@/lib/admin-auth";
 
 interface RawSkillListItem {
     id: string;
@@ -639,11 +639,10 @@ export default function AdminDashboardPage() {
                                         })
                                     }
                                     disabled={isSavingWorkerSettings}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 ${
-                                        workerSettings.auto_ingest_enabled
-                                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
-                                            : "bg-gray-50 text-gray-800 border-gray-200 hover:bg-gray-100"
-                                    }`}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 ${workerSettings.auto_ingest_enabled
+                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                                        : "bg-gray-50 text-gray-800 border-gray-200 hover:bg-gray-100"
+                                        }`}
                                 >
                                     {isSavingWorkerSettings ? "저장 중..." : workerSettings.auto_ingest_enabled ? "끄기" : "켜기"}
                                 </button>
@@ -720,11 +719,10 @@ export default function AdminDashboardPage() {
                                         patchSkillValidationSettings({ enforce: !skillValidationSettings.enforce })
                                     }
                                     disabled={isSavingWorkerSettings}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 ${
-                                        skillValidationSettings.enforce
-                                            ? "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
-                                            : "bg-gray-50 text-gray-800 border-gray-200 hover:bg-gray-100"
-                                    }`}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 ${skillValidationSettings.enforce
+                                        ? "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                                        : "bg-gray-50 text-gray-800 border-gray-200 hover:bg-gray-100"
+                                        }`}
                                 >
                                     enforce: {skillValidationSettings.enforce ? "ON" : "OFF"}
                                 </button>

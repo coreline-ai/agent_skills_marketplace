@@ -1,4 +1,4 @@
-import { api } from "@/app/lib/api";
+import { api } from "@/lib/api";
 import { PackCard } from "@/components/PackCard";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";

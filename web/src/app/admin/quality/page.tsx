@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldAlert, ShieldCheck } from "lucide-react";
-import { api, ApiError } from "@/app/lib/api";
-import { clearAdminSession, getAdminToken } from "@/app/lib/admin-auth";
+import { api, ApiError } from "@/lib/api";
+import { clearAdminSession, getAdminToken } from "@/lib/admin-auth";
 
 interface RawSkillIssueItem {
     id: string;
