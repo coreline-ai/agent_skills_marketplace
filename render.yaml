@@ -24,8 +24,8 @@ services:
   - type: web
     name: skills-marketplace-web
     env: docker
-    dockerContext: ./web
-    dockerfilePath: Dockerfile
+    dockerContext: .
+    dockerfilePath: web/Dockerfile
     plan: free
     envVars:
       - key: NEXT_PUBLIC_API_URL
