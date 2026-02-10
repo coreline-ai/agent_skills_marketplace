@@ -22,6 +22,8 @@ ENV NEXT_TELEMETRY_DISABLED 1
 
 RUN ls -la
 RUN ls -R src || echo "src not found"
+RUN ls -la src/lib || echo "src/lib not found"
+RUN ls -la src/lib/api.ts || echo "src/lib/api.ts not found"
 RUN cat tsconfig.json || echo "tsconfig.json not found"
 RUN npm run build
 
