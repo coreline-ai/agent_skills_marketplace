@@ -19,6 +19,19 @@ services:
       - key: PORT
         value: 10000
     healthCheckPath: /health
+    buildFilter:
+      paths:
+        - app/**
+        - migrations/**
+        - scripts/**
+        - Dockerfile.api
+        - pyproject.toml
+        - alembic.ini
+        - render.yaml
+      ignoredPaths:
+        - README.md
+        - docs/**
+        - web/**
 
   # 2. Web Frontend (Next.js)
   - type: web
@@ -33,3 +46,16 @@ services:
       - key: PORT
         value: 10000
     healthCheckPath: /health
+    buildFilter:
+      paths:
+        - web/**
+        - render.yaml
+      ignoredPaths:
+        - README.md
+        - docs/**
+        - app/**
+        - migrations/**
+        - scripts/**
+        - Dockerfile.api
+        - pyproject.toml
+        - alembic.ini
