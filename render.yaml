@@ -5,15 +5,19 @@ services:
     env: docker
     dockerContext: .
     dockerfilePath: Dockerfile.api
-    plan: free # Free tier available
+    dockerCommand: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    plan: free
     envVars:
       - key: DATABASE_URL
-        sync: false # User will provide this from Supabase
-      - key: SECRET_KEY
-        generateValue: true # Render will generate a random string
+        sync: false # Provide Supabase Connection String
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD_HASH
+        sync: false # Provide the bcrypt hash
+      - key: JWT_SECRET_KEY
+        generateValue: true
       - key: PORT
         value: 8000
-    preDeployCommand: alembic upgrade head
     healthCheckPath: /health
 
   # 2. Background Worker (Python)
@@ -26,10 +30,7 @@ services:
     plan: free
     envVars:
       - key: DATABASE_URL
-        fromService:
-          type: web
-          name: skills-marketplace-api
-          property: envVar:DATABASE_URL
+        sync: false # Provide the same Supabase URL here
 
   # 3. Web Frontend (Next.js)
   - type: web
@@ -46,3 +47,4 @@ services:
           property: host
       - key: PORT
         value: 3000
+
