@@ -60,6 +60,18 @@ class Settings(BaseSettings):
     skill_validation_profile: str = "lax"
     skill_validation_enforce: bool = True
 
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def enforce_asyncpg(cls, value: str) -> str:
+        """Ensure the database URL uses the asyncpg driver."""
+        if isinstance(value, str):
+            if value.startswith("postgresql://"):
+                return value.replace("postgresql://", "postgresql+asyncpg://", 1)
+            # Handle cases where user might use postgres:// (old Heroku style or others)
+            if value.startswith("postgres://"):
+                return value.replace("postgres://", "postgresql+asyncpg://", 1)
+        return value
+
     @field_validator("admin_password_hash", mode="before")
     @classmethod
     def normalize_admin_hash(cls, value: str) -> str:
@@ -72,6 +84,7 @@ class Settings(BaseSettings):
     def cors_origin_list(self) -> list[str]:
         """Parse CORS origins from comma-separated string."""
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
 
 
 @lru_cache
