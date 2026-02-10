@@ -17,7 +17,7 @@ services:
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: PORT
-        value: 8000
+        value: 10000
     healthCheckPath: /health
 
   # 2. Web Frontend (Next.js)
@@ -34,8 +34,9 @@ services:
           name: skills-marketplace-api
           property: host
       - key: INTERNAL_API_URL
-        value: http://skills-marketplace-api:8000/api
+        value: http://skills-marketplace-api:10000/api
       - key: PORT
-        value: 3000
+        value: 10000
+    healthCheckPath: /health
 
 
