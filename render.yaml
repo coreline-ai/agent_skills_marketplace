@@ -33,6 +33,8 @@ services:
           type: web
           name: skills-marketplace-api
           property: host
+      - key: INTERNAL_API_URL
+        value: http://skills-marketplace-api:8000/api
       - key: PORT
         value: 3000
 
