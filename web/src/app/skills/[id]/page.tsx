@@ -1,4 +1,4 @@
-import { api } from "../../../lib/api";
+import { api } from "@/lib/api";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink, Box, Tag, Layers, FileText, Code, Globe, User, Calendar, Shield } from "lucide-react";
 import { SkillHeaderEngagement } from "@/components/SkillHeaderEngagement";
