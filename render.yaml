@@ -29,12 +29,7 @@ services:
     plan: free
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: skills-marketplace-api
-          property: host
-      - key: INTERNAL_API_URL
-        value: http://skills-marketplace-api:10000/api
+        value: https://skills-marketplace-api-3a6p.onrender.com/api
       - key: PORT
         value: 10000
     healthCheckPath: /health
