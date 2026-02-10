@@ -20,6 +20,9 @@ COPY web/ .
 # Uncomment the following line in case you want to disable telemetry during the build.
 ENV NEXT_TELEMETRY_DISABLED 1
 
+RUN ls -la
+RUN ls -R src || echo "src not found"
+RUN cat tsconfig.json || echo "tsconfig.json not found"
 RUN npm run build
 
 # Production image, copy all the files and run next
