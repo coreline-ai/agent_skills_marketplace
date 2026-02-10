@@ -24,7 +24,7 @@ services:
   - type: web
     name: skills-marketplace-web
     env: docker
-    dockerContext: ./web
+    dockerContext: .
     dockerfilePath: web/Dockerfile
     plan: free
     envVars:
