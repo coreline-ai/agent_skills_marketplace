@@ -12,7 +12,13 @@ engine = create_async_engine(
     settings.database_url,
     echo=settings.log_level == "DEBUG",
     pool_pre_ping=True,
+    # Required for Supabase Transaction Pooler
+    connect_args={
+        "prepared_statement_cache_size": 0,
+        "statement_cache_size": 0,
+    },
 )
+
 
 AsyncSessionLocal = async_sessionmaker(
     engine,
