@@ -1,0 +1,49 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * *' # Every day at midnight
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install .[dev]
+
+      - name: Run pip-audit
+        run: |
+          pip install pip-audit
+          # Ignore vulnerabilities that don't have a fix yet if necessary, but keep it strict by default
+          pip-audit
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run npm audit (Frontend)
+        working-directory: web
+        run: |
+          npm audit --audit-level=high
+
+      - name: Run heuristic security scan (Custom)
+        run: |
+          # Example: check for hardcoded secrets or suspicious patterns
+          # This project already has heuristic_security_scan in app/quality/security_scan.py
+          # We could potentially invoke a script that runs it over the codebase.
+          echo "Heuristic scan placeholder"

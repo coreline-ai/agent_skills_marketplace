@@ -35,25 +35,25 @@ class SkillSourceLinkBase(BaseModel):
 
 class SkillBase(BaseModel):
     # Basic Info
-    name: str
-    slug: str
+    name: str = Field(..., min_length=1, max_length=100)
+    slug: str = Field(..., min_length=1, max_length=120)
     
     # Popularity snapshot
-    views: int = 0
-    stars: int = 0
-    score: float = 0.0
+    views: int = Field(default=0, ge=0)
+    stars: int = Field(default=0, ge=0)
+    score: float = Field(default=0.0, ge=0.0)
     
     is_official: bool = False
-    description: Optional[str] = None
-    category_slug: Optional[str] = None # normalized category slug
-    tags: list[str] = [] # normalized tag names
+    description: Optional[str] = Field(None, max_length=1000)
+    category_slug: Optional[str] = Field(None, max_length=50)
+    tags: list[str] = Field(default_factory=list) # normalized tag names
 
     # Basic Content
-    summary: Optional[str] = None
-    overview: Optional[str] = None
-    content: Optional[str] = None
-    author: Optional[str] = None
-    url: Optional[str] = None # Computed in Repo
+    summary: Optional[str] = Field(None, max_length=2000)
+    overview: Optional[str] = Field(None, max_length=10000)
+    content: Optional[str] = Field(None, max_length=100000)
+    author: Optional[str] = Field(None, max_length=100)
+    url: Optional[str] = Field(None, max_length=500)
 
     # Interface
     inputs: Optional[dict[str, Any]] = None

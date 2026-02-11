@@ -37,6 +37,13 @@ RUN chmod +x scripts/start.sh
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
+# Create a non-privileged user and group
+RUN adduser --system --group --no-create-home appuser && \
+    chown -R appuser:appuser /app
+
+# Switch to the non-privileged user
+USER appuser
+
 # Default command
 CMD ["./scripts/start.sh"]
 

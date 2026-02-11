@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     admin_password_hash: str = "$2b$12$hLswkuEVcK3pHzkOacog1er9oqZkB.8pJhCKyCf9Ru03K6FqpwEPi" # Hardcoded fallback for safety
     jwt_secret_key: str = "change-this-in-production"
     jwt_algorithm: str = "HS256"
-    jwt_expire_minutes: int = 1440
+    jwt_expire_minutes: int = 240
 
     # GitHub
     github_token: str = ""
