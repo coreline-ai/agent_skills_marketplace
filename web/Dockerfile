@@ -20,6 +20,10 @@ COPY web/ .
 # Uncomment the following line in case you want to disable telemetry during the build.
 ENV NEXT_TELEMETRY_DISABLED 1
 
+# NEXT_PUBLIC_* vars must be set BEFORE build — Next.js inlines them at build time.
+ARG NEXT_PUBLIC_API_URL=https://skills-marketplace-api-3a6p.onrender.com/api
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 RUN ls -la
 RUN ls -R src || echo "src not found"
 RUN ls -la src/lib || echo "src/lib not found"
