@@ -67,7 +67,7 @@ export default function AdminLoginPage() {
 
         } catch (err) {
             // Network errors etc
-            setError("연결에 실패했습니다. 네트워크를 확인해주세요.");
+            setError(`연결에 실패했습니다: ${err instanceof Error ? err.message : String(err)}`);
             console.error("Login Network Error:", err);
         } finally {
             setLoading(false);
