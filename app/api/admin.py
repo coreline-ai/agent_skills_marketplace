@@ -3,7 +3,7 @@
 from datetime import timedelta
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import or_, select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +12,7 @@ from app.api.deps import get_db, require_admin
 from app.settings import get_settings
 from app.security.auth import verify_password, create_access_token
 from app.models.raw_skill import RawSkill
+from app.limiter import limiter
 from app.models.skill import Skill
 from app.schemas.common import Page
 from app.ingest.sources import SOURCES
@@ -34,7 +35,8 @@ router = APIRouter()
 
 
 @router.post("/login")
-async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+@limiter.limit("5/minute")
+async def login(request: Request, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     """Admin login."""
     is_valid = verify_password(form_data.password, settings.admin_password_hash)
 
