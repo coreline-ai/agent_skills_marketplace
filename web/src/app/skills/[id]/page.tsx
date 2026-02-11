@@ -240,7 +240,7 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
                                     <Calendar className="w-4 h-4" /> Updated
                                 </span>
                                 <span className="text-sm font-bold text-gray-900 dark:text-white">
-                                    {new Date(skill.updated_at).toLocaleDateString()}
+                                    {new Date(skill.updated_at).toISOString().split('T')[0]}
                                 </span>
                             </div>
                             {(allowedTools.length > 0 || userInvocable !== null || disableModelInvocation !== null) && (

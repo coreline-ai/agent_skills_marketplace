@@ -15,7 +15,7 @@ export function PackCard(props: {
 }) {
     const dotclaude = props.dotclaude_skill_count ?? 0;
     const skillsDir = props.skills_dir_skill_count ?? 0;
-    const updated = props.updated_at ? new Date(props.updated_at).toLocaleDateString() : "";
+    const updated = props.updated_at ? new Date(props.updated_at).toISOString().split('T')[0] : "";
 
     return (
         <Link
