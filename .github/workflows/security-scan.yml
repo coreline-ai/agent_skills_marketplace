@@ -23,13 +23,13 @@ jobs:
       - name: Install Python Dependencies
         run: |
           pip install --upgrade pip
-          pip install .[dev]
+          pip install ".[dev]"
 
       - name: Run pip-audit
         run: |
           pip install pip-audit
-          # Ignore vulnerabilities that don't have a fix yet if necessary, but keep it strict by default
-          pip-audit
+          # Audit the current project and its dependencies only
+          pip-audit . --local
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
