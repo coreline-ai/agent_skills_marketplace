@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     """Application configuration."""
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    
+    # Environment
+    environment: str = Field(default="production", validation_alias=AliasChoices("ENV", "ENVIRONMENT"))
 
     # Database
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/skills_marketplace"
@@ -19,7 +22,7 @@ class Settings(BaseSettings):
     admin_password_hash: str = "$2b$12$hLswkuEVcK3pHzkOacog1er9oqZkB.8pJhCKyCf9Ru03K6FqpwEPi" # Hardcoded fallback for safety
     jwt_secret_key: str = "change-this-in-production"
     jwt_algorithm: str = "HS256"
-    jwt_expire_minutes: int = 240
+    jwt_expire_minutes: int = 240 # 4 hours
 
     # GitHub
     github_token: str = ""

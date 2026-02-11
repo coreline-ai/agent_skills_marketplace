@@ -29,6 +29,9 @@ def create_app() -> FastAPI:
         description="SKILL.md 기반 AI 에이전트 스킬 카탈로그",
         version="0.1.0",
         lifespan=lifespan,
+        docs_url="/docs" if settings.environment != "production" else None,
+        redoc_url="/redoc" if settings.environment != "production" else None,
+        openapi_url="/openapi.json" if settings.environment != "production" else None,
     )
 
     app.state.limiter = limiter

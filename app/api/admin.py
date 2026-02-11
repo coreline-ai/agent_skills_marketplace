@@ -16,6 +16,9 @@ from app.limiter import limiter
 from app.models.skill import Skill
 from app.schemas.common import Page
 from app.ingest.sources import SOURCES
+import logging
+
+logger = logging.getLogger(__name__)
 from app.schemas.worker_settings import WorkerSettings, WorkerSettingsPatch
 from app.schemas.skill_validation_settings import (
     SkillValidationSettings,
@@ -44,12 +47,14 @@ async def login(request: Request, form_data: Annotated[OAuth2PasswordRequestForm
         form_data.username != settings.admin_username
         or not is_valid
     ):
+        logger.warning(f"Failed login attempt for username: {form_data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    logger.info(f"Admin logged in: {form_data.username}")
     access_token_expires = timedelta(minutes=settings.jwt_expire_minutes)
     access_token = create_access_token(
         data={"sub": form_data.username}, expires_delta=access_token_expires
@@ -325,6 +330,7 @@ async def reparse_raw_skills(
         .values(parse_status="pending", parse_error=None)
     )
     await db.commit()
+    logger.info(f"Admin {current_user['sub']} triggered reparse for {len(ids)} skills.")
     return {"updated": len(ids)}
 
 
@@ -360,8 +366,11 @@ async def trigger_ingest(
         valid_ids = {str(s.get("id", "")).strip() for s in SOURCES if str(s.get("id", "")).strip()}
         if normalized not in valid_ids:
             raise HTTPException(status_code=404, detail=f"Unknown source_id: {normalized}")
+        logger.info(f"Admin {current_user['sub']} triggered ingest for source: {normalized}")
         background_tasks.add_task(ingest_and_parse.run, source_ids=[normalized])
         return {"status": "ingestion started", "source_id": normalized}
+    
+    logger.info(f"Admin {current_user['sub']} triggered global ingest.")
     background_tasks.add_task(ingest_and_parse.run)
     return {"status": "ingestion started", "source_id": None}
 
@@ -494,6 +503,7 @@ async def update_worker_settings(
     try:
         updated = await patch_worker_settings(db, payload)
         await db.commit()
+        logger.info(f"Admin {current_user['sub']} updated worker settings: {payload.model_dump(exclude_unset=True)}")
         return updated
     except ValueError as exc:
         await db.rollback()

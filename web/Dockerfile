@@ -1,5 +1,5 @@
 
-FROM node:20-slim AS base
+FROM node:20.18.0-slim AS base
 
 # Install dependencies only when needed
 FROM base AS deps
