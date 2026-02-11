@@ -147,6 +147,8 @@ async def seed_data():
             if not result.scalar_one_or_none():
                 cat = Category(**cat_data, display_order=0)
                 db.add(cat)
+        
+        await db.flush() # Ensure categories have IDs and are queryable
                 
         print("Seeding Sources...")
         for src_data in INITIAL_SOURCES:
