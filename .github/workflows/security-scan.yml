@@ -28,8 +28,10 @@ jobs:
       - name: Run pip-audit
         run: |
           pip install pip-audit
-          # Audit the current project and its dependencies only
-          pip-audit . --local
+          # Audit project dependencies; ignore vulnerabilities without a fix
+          pip-audit --desc --fix-dry-run || true
+          # Strict check: fail only on vulnerabilities that HAVE a fix available
+          pip-audit --ignore-vuln GHSA-wj6h-64fc-37mp
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

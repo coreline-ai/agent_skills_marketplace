@@ -61,6 +61,10 @@ export async function fetchApi<T>(endpoint: string, options: RequestOptions = {}
         clearTimeout(timeoutId);
 
         if (!response.ok) {
+            // 401 is an expected auth flow (token expired/missing) — not a real error
+            if (response.status === 401) {
+                throw new ApiError(response.status, response.statusText);
+            }
             console.error(`[API Error] ${response.status} ${response.statusText} at ${fullUrl}`);
             throw new ApiError(response.status, response.statusText);
         }
