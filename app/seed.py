@@ -98,6 +98,46 @@ gemini extensions install https://github.com/gemini-cli-extensions/stitch
     }
 ]
 
+async def backfill_uncategorized_skills(db):
+    """Assign categories to existing skills that have category_id = NULL.
+
+    Uses the same keyword-based classification from ingest_and_parse.py.
+    This covers the scenario where skills were created in production
+    before the categories table was seeded.
+    """
+    from app.workers.ingest_and_parse import classify_category_slug
+
+    # Build category lookup
+    cat_result = await db.execute(select(Category))
+    categories = cat_result.scalars().all()
+    category_id_by_slug = {c.slug: c.id for c in categories}
+    fallback_category_id = (
+        category_id_by_slug.get("tools")
+        or next(iter(category_id_by_slug.values()), None)
+    )
+
+    if not category_id_by_slug:
+        print("  No categories found, skipping backfill.")
+        return
+
+    # Find skills without a category
+    stmt = select(Skill).where(Skill.category_id.is_(None))
+    result = await db.execute(stmt)
+    uncategorized = result.scalars().all()
+
+    if not uncategorized:
+        print("  All skills already have categories assigned.")
+        return
+
+    print(f"  Backfilling {len(uncategorized)} uncategorized skill(s)...")
+    for skill in uncategorized:
+        slug = classify_category_slug(skill.name or "", skill.description or "")
+        skill.category_id = category_id_by_slug.get(slug, fallback_category_id)
+
+    await db.flush()
+    print(f"  Backfill complete.")
+
+
 async def seed_data():
     async with AsyncSessionLocal() as db:
         print("Seeding Categories...")
@@ -162,7 +202,11 @@ async def seed_data():
                         
                         skill_tag = SkillTag(skill_id=new_skill.id, tag_id=tag.id)
                         db.add(skill_tag)
-                        
+
+        # Backfill categories for any existing uncategorized skills
+        print("Backfilling uncategorized skills...")
+        await backfill_uncategorized_skills(db)
+
         await db.commit()
         print("Seed Complete.")
 

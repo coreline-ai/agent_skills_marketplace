@@ -51,6 +51,10 @@ else
     exit 1
 fi
 
+# Seed initial data (categories, sources, etc.)
+echo "Seeding database..."
+python -m app.seed
+
 # Start background worker in the background
 echo "Starting background worker..."
 python -m app.workers.run_all &
