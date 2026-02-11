@@ -13,7 +13,7 @@ services:
       - key: ADMIN_USERNAME
         value: admin
       - key: ADMIN_PASSWORD_HASH
-        sync: false
+        value: "$2b$12$IkI2Kx6zDQnaJs2GYMQFwOHVpcyUIzgP6rzEGtyjgtab6vu61F8m."
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: PORT
