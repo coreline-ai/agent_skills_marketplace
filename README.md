@@ -3,10 +3,11 @@
 > **SKILL.md** 기반 AI 에이전트 스킬 발견, 수집(ingest), 파싱/정합성 검증, 큐레이션 및 랭킹 통합 플랫폼
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python: 3.9+](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-green.svg)](https://fastapi.tiangolo.com/)
+[![Python: 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)](https://fastapi.tiangolo.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-16+-black.svg)](https://nextjs.org/)
 [![Docker](https://img.shields.io/badge/Docker-Supported-blue.svg)](https://www.docker.com/)
+[![Security Scan](https://github.com/coreline-ai/agent_skills_marketplace/actions/workflows/security-scan.yml/badge.svg)](https://github.com/coreline-ai/agent_skills_marketplace/actions/workflows/security-scan.yml)
 [![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-skills--marketplace-brightgreen)](https://skills-marketplace-web-3a6p.onrender.com/)
 
 > 🌐 **[라이브 데모 바로가기 →](https://skills-marketplace-web-3a6p.onrender.com/)**
@@ -103,17 +104,19 @@ graph LR
 ## 🛠️ 기술 스택
 
 ### Backend
-- FastAPI + SQLAlchemy(Async) + Alembic
-- Pydantic v2 / PyYAML / httpx
-- JWT + bcrypt(passlib)
+- **Python 3.10+** / FastAPI 0.115+ / SQLAlchemy(Async) / Alembic
+- Pydantic v2 (입력값 길이 제한 등 강화된 검증) / PyYAML / httpx
+- JWT (4시간 만료) + bcrypt(passlib)
+- 관리자 감사 로그 (Audit Logging)
 
 ### Frontend
 - Next.js(App Router) + TypeScript
 - Tailwind CSS
 
 ### Infra
-- Docker Compose
+- Docker Compose (이미지 태그 고정: `python:3.11.10-slim`, `node:20.18.0-slim`)
 - PostgreSQL 15
+- 비루트(non-root) 컨테이너 실행
 
 ---
 
@@ -125,11 +128,20 @@ graph LR
 cp .env.example .env
 ```
 
-권장 설정:
-- `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`
-- `JWT_SECRET_KEY` (운영 환경에서는 반드시 변경)
-- `GITHUB_TOKEN` (GitHub 코드 검색 소스 rate limit 완화)
-- `CORS_ORIGINS`: 기본값에 `http://localhost:3004`가 포함되어 있어야 합니다. (Web 기본 포트가 `3004`)
+`.env.example`에 모든 설정 항목과 설명이 포함되어 있습니다. 주요 설정:
+
+| 변수 | 설명 | 필수 |
+|------|------|------|
+| `ENV` | `development` / `production` (기본: `production`) | ✅ |
+| `DATABASE_URL` | PostgreSQL 접속 URL | ✅ |
+| `ADMIN_USERNAME` | 관리자 계정 | ✅ |
+| `ADMIN_PASSWORD_HASH` | bcrypt 해시된 비밀번호 | ✅ |
+| `JWT_SECRET_KEY` | JWT 시크릿 (운영 시 반드시 변경) | ✅ |
+| `GITHUB_TOKEN` | GitHub API 토큰 (rate limit 완화) | 권장 |
+| `CORS_ORIGINS` | 허용 Origin 목록 (쉼표 구분) | ✅ |
+| `GLM_API_KEY` | AI 요약 생성용 API 키 | 선택 |
+
+> ⚠️ **프로덕션 환경에서는 `ENV=production`으로 설정하세요.** Swagger/ReDoc 문서가 자동으로 비활성화됩니다.
 
 ### 2) 서비스 실행
 
@@ -147,7 +159,7 @@ docker exec -it skills_marketplace_api python -m app.seed
 
 ### 4) 접속
 - Web UI: `http://localhost:3004`
-- API Docs: `http://localhost:8000/docs`
+- API Docs: `http://localhost:8000/docs` (개발 환경에서만 접근 가능)
 - DB(host 접근): `localhost:5433` (컨테이너 내부는 `db:5432`)
 
 ---
@@ -269,6 +281,23 @@ docker exec -it skills_marketplace_api pytest -q
 
 ## 🔐 보안 노트
 
+본 프로젝트는 다층적 보안 체계를 적용하고 있습니다. 자세한 내용은 [SECURITY.md](SECURITY.md)를 참고하세요.
+
+### 적용된 보안 조치
+
+| 영역 | 조치 | 상태 |
+|------|------|------|
+| 🐳 Docker | 비루트(non-root) 사용자로 컨테이너 실행 | ✅ |
+| 🐳 Docker | 이미지 태그 특정 버전 고정 | ✅ |
+| 🔑 인증 | JWT 만료 시간 4시간 (기존 24시간) | ✅ |
+| 🛡️ 입력 검증 | Pydantic `max_length` 등 제약 조건 추가 | ✅ |
+| 📋 감사 로그 | 관리자 로그인/수집/설정 변경 기록 | ✅ |
+| 📖 API 문서 | 프로덕션 환경 Swagger/ReDoc 비활성화 | ✅ |
+| 🔍 자동 스캔 | GitHub Actions를 통한 `pip-audit` / `npm audit` | ✅ |
+| 🔒 비밀번호 | 로그에 민감 정보 미기록 확인 | ✅ |
+| 📦 의존성 | 취약 패키지 최신 보안 버전으로 업그레이드 | ✅ |
+
+### 주의사항
 - `.env`, `.cursor/`, `.vscode/` 같은 로컬 설정/시크릿 파일은 레포에 커밋하지 마세요.
 - 과거 커밋에 API 키/토큰이 포함되었다면, 파일을 삭제했더라도 **키는 회수/재발급(rotate)** 하는 것이 안전합니다.
 
