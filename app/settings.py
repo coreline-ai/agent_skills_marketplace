@@ -57,6 +57,12 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = "INFO"
 
+    # Redis L2 cache (optional)
+    redis_url: str = ""
+    redis_cache_enabled: bool = True
+    redis_cache_prefix: str = "skills-marketplace"
+    redis_cache_timeout_ms: int = 150
+
     # Skill validation/enforcement (ingest pipeline)
     # - profile: "lax" (default) logs warnings but only hard failures become errors
     # - profile: "strict" elevates more spec issues to errors

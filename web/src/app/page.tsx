@@ -21,7 +21,7 @@ export const dynamic = 'force-dynamic';
 
 async function getTopSkills() {
   try {
-    const res = await api.get<RankingItem[]>("/rankings/top10");
+    const res = await api.get<RankingItem[]>("/rankings/top10", undefined, { revalidateSeconds: 30 });
     return res;
   } catch (e) {
     console.error(e);

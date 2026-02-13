@@ -156,6 +156,8 @@ async def list_repo_skills_candidates(
 
         repo_data = resp.json()
         default_branch = repo_data.get("default_branch", "main")
+        stargazers_count = repo_data.get("stargazers_count", 0)
+        pushed_at = repo_data.get("pushed_at")
 
         # 2. Get Tree (Recursive)
         tree_url = f"{repo_url}/git/trees/{default_branch}?recursive=1"
@@ -206,6 +208,8 @@ async def list_repo_skills_candidates(
                     "repo_total_files": focus["total_files"],
                     "repo_skill_files": focus["skill_file_count"],
                     "repo_canonical_skill_files": focus["canonical_skill_file_count"],
+                    "github_stars": stargazers_count,
+                    "github_pushed_at": pushed_at,
                 }
             )
 

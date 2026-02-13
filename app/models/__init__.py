@@ -13,6 +13,9 @@ from app.models.skill_popularity import SkillPopularity
 from app.models.skill_rank_snapshot import SkillRankSnapshot
 from app.models.github_repo_cache import GithubRepoCache
 from app.models.system_setting import SystemSetting
+from app.models.api_key import ApiKey
+from app.models.api_key_usage import ApiKeyRateWindow, ApiKeyDailyUsage, ApiKeyMonthlyUsage
+from app.models.skill_trust_audit import SkillTrustAudit
 
 __all__ = [
     "SkillSource",
@@ -28,4 +31,9 @@ __all__ = [
     "SkillRankSnapshot",
     "GithubRepoCache",
     "SystemSetting",
+    "ApiKey",
+    "ApiKeyRateWindow",
+    "ApiKeyDailyUsage",
+    "ApiKeyMonthlyUsage",
+    "SkillTrustAudit",
 ]

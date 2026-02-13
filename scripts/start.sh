@@ -53,7 +53,7 @@ fi
 
 # Seed initial data (categories, sources, etc.)
 echo "Seeding database..."
-python -m app.seed
+python -m app.seed || true
 
 # Start background worker in the background
 echo "Starting background worker..."

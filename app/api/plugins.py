@@ -6,11 +6,13 @@ originate from plugin marketplace sources (e.g. Claude Code Marketplace).
 
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
+from app.api.cache_headers import PUBLIC_SEARCH_CACHE, REDIS_TTL_SEARCH, set_public_cache
 from app.ingest.sources import SOURCES
+from app.api.response_cache import set_cached_response, try_cached_response
 from app.repos.skill_repo import SkillRepo
 from app.schemas.common import Page
 from app.schemas.skill import SkillListItem, SkillQuery
@@ -35,8 +37,20 @@ def _default_plugin_source_names() -> list[str]:
     return sorted(names)
 
 
+def _skill_list_page_payload(page_result: Page[SkillListItem]) -> dict:
+    return {
+        "items": [SkillListItem.model_validate(item).model_dump(mode="json") for item in page_result.items],
+        "total": page_result.total,
+        "page": page_result.page,
+        "size": page_result.size,
+        "pages": page_result.pages,
+    }
+
+
 @router.get("", response_model=Page[SkillListItem])
 async def list_plugins(
+    request: Request,
+    response: Response,
     db: Annotated[AsyncSession, Depends(get_db)],
     q: Optional[str] = None,
     category: Optional[str] = None,
@@ -46,6 +60,14 @@ async def list_plugins(
     size: int = Query(20, ge=1, le=100),
 ):
     """List plugin-marketplace items (as Skill cards) with filtering."""
+    set_public_cache(response, PUBLIC_SEARCH_CACHE)
+    cached = await try_cached_response(
+        request=request,
+        namespace="plugins:list",
+        cache_control=PUBLIC_SEARCH_CACHE,
+    )
+    if cached is not None:
+        return cached
     repo = SkillRepo(db)
     query = SkillQuery(
         q=q,
@@ -60,10 +82,19 @@ async def list_plugins(
         source_names=_default_plugin_source_names(),
     )
     total_pages = (total + size - 1) // size
-    return Page(
+    page_result = Page(
         items=items,
         total=total,
         page=page,
         size=size,
         pages=total_pages,
     )
+    payload = _skill_list_page_payload(page_result)
+    await set_cached_response(
+        request=request,
+        namespace="plugins:list",
+        payload=payload,
+        ttl_seconds=REDIS_TTL_SEARCH,
+    )
+    response.headers["X-Cache"] = "MISS"
+    return payload

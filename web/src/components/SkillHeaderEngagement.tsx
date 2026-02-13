@@ -151,17 +151,17 @@ export function SkillHeaderEngagement({
                             href={installUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 bg-foreground dark:bg-white text-background dark:text-black px-8 py-3 rounded-full font-bold text-lg shadow-soft hover:shadow-hover hover:-translate-y-0.5 transition-all"
+                            className="inline-flex items-center gap-2 bg-foreground dark:bg-white text-background dark:text-black px-5 py-2 rounded-full font-bold text-sm shadow-soft hover:shadow-hover hover:-translate-y-0.5 transition-all"
                         >
-                            <Download className="w-5 h-5" /> Open Source
+                            <Download className="w-4 h-4" /> Open Source
                         </a>
                     ) : (
                         <button
                             type="button"
                             disabled
-                            className="inline-flex items-center gap-2 bg-sidebar dark:bg-zinc-900 text-text-muted border border-dashed border-border dark:border-white/5 px-8 py-3 rounded-full font-bold text-lg cursor-not-allowed"
+                            className="inline-flex items-center gap-2 bg-sidebar dark:bg-zinc-900 text-text-muted border border-dashed border-border dark:border-white/5 px-5 py-2 rounded-full font-bold text-sm cursor-not-allowed"
                         >
-                            <Download className="w-5 h-5" /> No Source URL
+                            <Download className="w-4 h-4" /> No Source URL
                         </button>
                     )}
                 </div>

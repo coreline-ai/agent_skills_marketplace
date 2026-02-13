@@ -3,6 +3,23 @@
 import asyncio
 import hashlib
 import re
+from sentence_transformers import SentenceTransformer
+
+# Initialize embedding model (singleton)
+_embedding_model = None
+
+def get_embedding_model():
+    global _embedding_model
+    if _embedding_model is None:
+        # Use a small, efficient model for now
+        _embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+    return _embedding_model
+
+def generate_embedding(text: str) -> list[float]:
+    if not text or not text.strip():
+        return None
+    model = get_embedding_model()
+    return model.encode(text).tolist()
 from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -19,6 +36,7 @@ from app.quality.claude_skill_spec import validate_claude_skill_frontmatter
 from app.llm.glm_client import summarize_skill_overview, summarize_skill_detail_overview
 from app.quality.security_scan import heuristic_security_scan
 from app.llm.glm_client import classify_skill_security
+from app.quality.trust_score import compute_trust_profile
 from app.settings import get_settings
 from app.repos.system_setting_repo import _get_skill_validation_settings_value
 from app.repos.system_setting_repo import get_worker_status_value, set_worker_status_value
@@ -678,6 +696,7 @@ async def parse_queued_raw_skills(db: AsyncSession) -> dict:
                 name = derive_skill_name(metadata, source_url, canonical_url)
                 description = derive_skill_description(metadata, body)
                 tag_slugs = _extract_tag_slugs(metadata)
+                use_cases = parsed.get("use_cases") or []
 
                 # Security scan: block obvious hacking / malicious instructions.
                 # This is enforced during parsing so "bad" SKILL.md never becomes a Skill row.
@@ -854,6 +873,18 @@ async def parse_queued_raw_skills(db: AsyncSession) -> dict:
                     category_slug = normalize_category_slug(classify_category_slug(name, description))
                 category_id = category_id_by_slug.get(category_slug, fallback_category_id)
 
+                # Extract GitHub stats from ingest metadata
+                ingest_meta = raw.metadata or {}
+                github_stars = ingest_meta.get("github_stars")
+                github_pushed_at_str = ingest_meta.get("github_pushed_at")
+                github_updated_at = None
+                if github_pushed_at_str:
+                    from dateutil.parser import parse as parse_date
+                    try:
+                        github_updated_at = parse_date(github_pushed_at_str)
+                    except Exception:
+                        pass
+
                 existing_skill = (
                     await db.execute(select(Skill).where(Skill.url == canonical_url).limit(1))
                 ).scalar_one_or_none()
@@ -884,6 +915,27 @@ async def parse_queued_raw_skills(db: AsyncSession) -> dict:
                     }
                     existing_skill.is_official = True
                     existing_skill.is_verified = True
+                    existing_skill.github_stars = github_stars
+                    existing_skill.github_updated_at = github_updated_at
+                    existing_skill.use_cases = use_cases
+                    existing_skill.embedding = generate_embedding(
+                        f"{name} {description} {spec_result.derived_description or ''} {' '.join(use_cases)}"
+                    )
+                    existing_skill.quality_score = float(quality.score)
+                    trust_profile = compute_trust_profile(
+                        quality_score=quality.score,
+                        is_verified=True,
+                        is_official=True,
+                        security_block=bool(block),
+                        security_severity=block_severity,
+                        security_indicators=block_indicators,
+                        github_updated_at=github_updated_at,
+                    )
+                    if not existing_skill.trust_override:
+                        existing_skill.trust_score = trust_profile.score
+                        existing_skill.trust_level = trust_profile.level
+                        existing_skill.trust_flags = trust_profile.flags
+                    existing_skill.trust_last_verified_at = datetime.now(timezone.utc)
                     created_count = 0
                     updated_count = 1
 
@@ -921,7 +973,30 @@ async def parse_queued_raw_skills(db: AsyncSession) -> dict:
                         },
                         is_official=True,
                         is_verified=True,
+                        github_stars=github_stars,
+                        github_updated_at=github_updated_at,
+                        use_cases=use_cases,
+                        quality_score=float(quality.score),
+                        trust_score=0.0,
+                        trust_level="warning",
+                        trust_flags=[],
+                        trust_last_verified_at=datetime.now(timezone.utc),
+                        embedding=generate_embedding(
+                            f"{name} {description} {spec_result.derived_description or ''} {' '.join(use_cases)}"
+                        ),
                     )
+                    trust_profile = compute_trust_profile(
+                        quality_score=quality.score,
+                        is_verified=True,
+                        is_official=True,
+                        security_block=bool(block),
+                        security_severity=block_severity,
+                        security_indicators=block_indicators,
+                        github_updated_at=github_updated_at,
+                    )
+                    new_skill.trust_score = trust_profile.score
+                    new_skill.trust_level = trust_profile.level
+                    new_skill.trust_flags = trust_profile.flags
                     db.add(new_skill)
                     await db.flush()
                     await _ensure_skill_tags(db, skill_id=new_skill.id, tag_slugs=tag_slugs)
@@ -1264,6 +1339,76 @@ async def backfill_missing_specs_from_raw_frontmatter(db: AsyncSession, *, limit
     return updated
 
 
+
+async def backfill_missing_embeddings(db: AsyncSession, *, limit: int = 100) -> int:
+    """Backfill missing embeddings for existing skills."""
+    from app.models.skill import Skill
+    
+    if limit <= 0:
+        return 0
+
+    stmt = (
+        select(Skill)
+        .where(Skill.embedding.is_(None))
+        .where(Skill.description.is_not(None))
+        .order_by(Skill.updated_at.desc())
+        .limit(int(limit))
+    )
+    result = await db.execute(stmt)
+    skills = result.scalars().all()
+
+    updated = 0
+    for skill in skills:
+        text = f"{skill.name or ''} {skill.description or ''} {skill.summary or ''} {' '.join(skill.use_cases or [])}"
+        embedding = generate_embedding(text)
+        if embedding:
+            skill.embedding = embedding
+            updated += 1
+    
+    if updated:
+        await db.commit()
+    return updated
+
+
+async def backfill_missing_trust_profiles(db: AsyncSession, *, limit: int = 200) -> int:
+    """Backfill trust profile fields for existing skills."""
+    from app.models.skill import Skill
+
+    if limit <= 0:
+        return 0
+
+    stmt = (
+        select(Skill)
+        .where((Skill.trust_score.is_(None)) | (Skill.trust_level.is_(None)))
+        .order_by(Skill.updated_at.desc())
+        .limit(int(limit))
+    )
+    skills = (await db.execute(stmt)).scalars().all()
+    if not skills:
+        return 0
+
+    updated = 0
+    for skill in skills:
+        trust = compute_trust_profile(
+            quality_score=skill.quality_score,
+            is_verified=bool(skill.is_verified),
+            is_official=bool(skill.is_official),
+            security_block=False,
+            security_severity=None,
+            security_indicators=None,
+            github_updated_at=skill.github_updated_at,
+            extra_flags=skill.trust_flags if isinstance(skill.trust_flags, list) else None,
+        )
+        skill.trust_score = trust.score
+        skill.trust_level = trust.level
+        skill.trust_flags = trust.flags
+        skill.trust_last_verified_at = datetime.now(timezone.utc)
+        updated += 1
+
+    if updated:
+        await db.commit()
+    return updated
+
 async def run(source_ids: Optional[list[str]] = None):
     """Run ingest and parse workflow."""
     async with AsyncSessionLocal() as db:
@@ -1301,6 +1446,21 @@ async def run(source_ids: Optional[list[str]] = None):
                 print(f"Backfilled {filled} missing detail overviews.")
         except Exception as e:
             print(f"Detail overview backfill error: {e}")
+        
+        # Backfill embeddings
+        try:
+            filled = await backfill_missing_embeddings(db, limit=50)
+            if filled:
+                print(f"Backfilled {filled} missing embeddings.")
+        except Exception as e:
+            print(f"Embedding backfill error: {e}")
+        try:
+            filled = await backfill_missing_trust_profiles(db, limit=300)
+            if filled:
+                print(f"Backfilled {filled} missing trust profiles.")
+        except Exception as e:
+            print(f"Trust profile backfill error: {e}")
+
     return {
         "ingested": int(ingested or 0),
         "parse": parse_stats if isinstance(parse_stats, dict) else None,

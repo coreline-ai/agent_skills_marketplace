@@ -12,9 +12,31 @@ interface SkillCardProps {
     stars: number;
     score: number;
     rank?: number;
+    githubStars?: number | null;
+    githubUpdatedAt?: string | null;
+    matchReason?: string | null;
+    trustScore?: number | null;
+    trustLevel?: string | null;
+    trustFlags?: string[] | null;
 }
 
-export function SkillCard({ id, name, slug, description, summary, category, views, stars, rank }: SkillCardProps) {
+export function SkillCard({
+    id,
+    name,
+    slug,
+    description,
+    summary,
+    category,
+    views,
+    stars,
+    rank,
+    githubStars,
+    githubUpdatedAt,
+    matchReason,
+    trustScore,
+    trustLevel,
+    trustFlags,
+}: SkillCardProps) {
     const blurb = (summary && summary.trim()) ? summary : description;
 
     // Category tag style mapping based on code.html design
@@ -51,6 +73,25 @@ export function SkillCard({ id, name, slug, description, summary, category, view
                     {blurb}
                 </p>
 
+                {matchReason && (
+                    <div className="mb-4 text-[11px] font-semibold uppercase tracking-wide text-accent">
+                        {matchReason}
+                    </div>
+                )}
+                {trustLevel && (
+                    <div
+                        className={`mb-4 inline-flex items-center gap-1 px-2 py-1 rounded border text-[10px] font-bold uppercase tracking-wide w-fit ${trustLevel === "ok"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-500/30"
+                                : trustLevel === "warning"
+                                    ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-500/30"
+                                    : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:border-rose-500/30"
+                            }`}
+                        title={trustFlags && trustFlags.length > 0 ? trustFlags.join(", ") : "Trust score"}
+                    >
+                        Trust {trustScore !== undefined && trustScore !== null ? Math.round(trustScore) : "-"}
+                    </div>
+                )}
+
                 <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/10 pt-4 text-xs text-gray-400 dark:text-gray-500 mt-auto">
                     <div className="flex items-center gap-4">
                         <span className="flex items-center gap-1.5 hover:text-gray-600 transition-colors">
@@ -61,6 +102,17 @@ export function SkillCard({ id, name, slug, description, summary, category, view
                             <Eye className="w-3.5 h-3.5" />
                             <span className="font-medium">{views}</span>
                         </span>
+                        {githubStars !== undefined && githubStars !== null && (
+                            <span className="flex items-center gap-1.5 text-orange-500 font-bold">
+                                <Star className="w-3.5 h-3.5 fill-current" />
+                                <span>{githubStars}</span>
+                            </span>
+                        )}
+                        {githubUpdatedAt && (
+                            <span className="text-[10px] text-gray-400 dark:text-zinc-600">
+                                {new Date(githubUpdatedAt).toLocaleDateString()}
+                            </span>
+                        )}
                     </div>
                     <div className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1 hover:text-accent tracking-wider transition-colors">
                         DETAILS <ChevronRight className="w-2.5 h-2.5" />

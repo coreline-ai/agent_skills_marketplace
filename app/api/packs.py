@@ -5,14 +5,22 @@ from __future__ import annotations
 import re
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from sqlalchemy import case, desc, func, literal, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_db
+from app.api.cache_headers import (
+    PUBLIC_DETAIL_CACHE,
+    PUBLIC_SEARCH_CACHE,
+    REDIS_TTL_DETAIL,
+    REDIS_TTL_SEARCH,
+    set_public_cache,
+)
 from app.models.skill import Skill
 from app.repos.public_filters import public_skill_conditions
+from app.api.response_cache import set_cached_response, try_cached_response
 from app.schemas.common import Page
 from app.schemas.pack import PackListItem, PackDetail
 from app.schemas.skill import SkillListItem
@@ -48,14 +56,34 @@ def _repo_url_expr(repo_full_name):
     return func.concat(literal("https://github.com/"), repo_full_name)
 
 
+def _skill_list_page_payload(page_result: Page[SkillListItem]) -> dict:
+    return {
+        "items": [SkillListItem.model_validate(item).model_dump(mode="json") for item in page_result.items],
+        "total": page_result.total,
+        "page": page_result.page,
+        "size": page_result.size,
+        "pages": page_result.pages,
+    }
+
+
 @router.get("", response_model=Page[PackListItem])
 async def list_packs(
+    request: Request,
+    response: Response,
     db: Annotated[AsyncSession, Depends(get_db)],
     q: Optional[str] = None,
     sort: str = "skills",
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
 ):
+    set_public_cache(response, PUBLIC_SEARCH_CACHE)
+    cached = await try_cached_response(
+        request=request,
+        namespace="packs:list",
+        cache_control=PUBLIC_SEARCH_CACHE,
+    )
+    if cached is not None:
+        return cached
     repo_full_name = _repo_full_name_expr().label("repo_full_name")
     repo_url = _repo_url_expr(repo_full_name).label("repo_url")
 
@@ -113,14 +141,33 @@ async def list_packs(
         )
 
     pages = (int(total or 0) + size - 1) // size
-    return Page(items=items, total=int(total or 0), page=page, size=size, pages=pages)
+    page_result = Page(items=items, total=int(total or 0), page=page, size=size, pages=pages)
+    payload = page_result.model_dump(mode="json")
+    await set_cached_response(
+        request=request,
+        namespace="packs:list",
+        payload=payload,
+        ttl_seconds=REDIS_TTL_SEARCH,
+    )
+    response.headers["X-Cache"] = "MISS"
+    return payload
 
 
 @router.get("/{id}", response_model=PackDetail)
 async def get_pack(
+    request: Request,
+    response: Response,
     id: str,
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
+    set_public_cache(response, PUBLIC_DETAIL_CACHE)
+    cached = await try_cached_response(
+        request=request,
+        namespace="packs:detail",
+        cache_control=PUBLIC_DETAIL_CACHE,
+    )
+    if cached is not None:
+        return cached
     repo_full_name_value = _repo_full_name_from_pack_id(id)
     repo_full_name = _repo_full_name_expr().label("repo_full_name")
     repo_url = _repo_url_expr(repo_full_name).label("repo_url")
@@ -161,7 +208,7 @@ async def get_pack(
     description = (await db.execute(desc_stmt)).scalar_one_or_none()
 
     repo_full_name_str = str(row.repo_full_name)
-    return PackDetail(
+    result = PackDetail(
         id=_pack_id_from_repo_full_name(repo_full_name_str),
         repo_full_name=repo_full_name_str,
         repo_url=str(row.repo_url),
@@ -171,15 +218,34 @@ async def get_pack(
         skills_dir_skill_count=int(row.skills_dir_skill_count or 0),
         description=description,
     )
+    payload = result.model_dump(mode="json")
+    await set_cached_response(
+        request=request,
+        namespace="packs:detail",
+        payload=payload,
+        ttl_seconds=REDIS_TTL_DETAIL,
+    )
+    response.headers["X-Cache"] = "MISS"
+    return payload
 
 
 @router.get("/{id}/skills", response_model=Page[SkillListItem])
 async def list_pack_skills(
+    request: Request,
+    response: Response,
     id: str,
     db: Annotated[AsyncSession, Depends(get_db)],
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
 ):
+    set_public_cache(response, PUBLIC_SEARCH_CACHE)
+    cached = await try_cached_response(
+        request=request,
+        namespace="packs:skills",
+        cache_control=PUBLIC_SEARCH_CACHE,
+    )
+    if cached is not None:
+        return cached
     repo_full_name_value = _repo_full_name_from_pack_id(id)
     repo_full_name = _repo_full_name_expr()
 
@@ -200,4 +266,13 @@ async def list_pack_skills(
     rows = (await db.execute(stmt)).scalars().all()
 
     pages = (int(total or 0) + size - 1) // size
-    return Page(items=rows, total=int(total or 0), page=page, size=size, pages=pages)
+    page_result = Page(items=rows, total=int(total or 0), page=page, size=size, pages=pages)
+    payload = _skill_list_page_payload(page_result)
+    await set_cached_response(
+        request=request,
+        namespace="packs:skills",
+        payload=payload,
+        ttl_seconds=REDIS_TTL_SEARCH,
+    )
+    response.headers["X-Cache"] = "MISS"
+    return payload

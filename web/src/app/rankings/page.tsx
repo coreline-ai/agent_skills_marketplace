@@ -16,7 +16,7 @@ interface RankingItem {
 
 async function getRankings() {
     try {
-        return await api.get<RankingItem[]>("/rankings/top10");
+        return await api.get<RankingItem[]>("/rankings/top10", undefined, { revalidateSeconds: 30 });
     } catch (e) {
         console.error(e);
         return [];

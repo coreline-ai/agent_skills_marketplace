@@ -1,8 +1,21 @@
 version: '3.9'
 
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: skills_marketplace_redis
+    restart: always
+    ports:
+      - "6380:6379"
+    command: [ "redis-server", "--save", "", "--appendonly", "no" ]
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
   db:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg15
     container_name: skills_marketplace_db
     restart: always
     environment:
@@ -25,12 +38,18 @@ services:
       dockerfile: Dockerfile.api
     container_name: skills_marketplace_api
     restart: always
+    volumes:
+      - .:/app
+      - huggingface_cache:/app/data/cache/huggingface
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     env_file: .env
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-skills_marketplace}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
     ports:
       - "8000:8000"
     healthcheck:
@@ -45,6 +64,9 @@ services:
       dockerfile: Dockerfile.api
     container_name: skills_marketplace_worker
     restart: always
+    volumes:
+      - .:/app
+      - huggingface_cache:/app/data/cache/huggingface
     depends_on:
       db:
         condition: service_healthy
@@ -59,16 +81,19 @@ services:
     build:
       context: .
       dockerfile: web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000/api
     container_name: skills_marketplace_web
     restart: always
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000/api
       INTERNAL_API_URL: http://api:8000/api
     ports:
-      - "3004:3000"
+      - "3004:10000"
 
 volumes:
   skills_db_data:
+  huggingface_cache:
 
 
 networks:

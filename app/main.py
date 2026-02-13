@@ -4,10 +4,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
+from app.cache.redis_l2 import redis_l2_cache
 from app.settings import get_settings
 from app.limiter import limiter
 
@@ -15,9 +17,11 @@ from app.limiter import limiter
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan handler."""
-    # Startup
-    yield
-    # Shutdown
+    await redis_l2_cache.init()
+    try:
+        yield
+    finally:
+        await redis_l2_cache.close()
 
 
 def create_app() -> FastAPI:
@@ -45,6 +49,8 @@ def create_app() -> FastAPI:
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
         allow_headers=["Content-Type", "Authorization"],
     )
+    # Compress larger JSON payloads (lists/details) for faster network transfer.
+    app.add_middleware(GZipMiddleware, minimum_size=1024)
 
     # Health check
     @app.get("/health", tags=["Health"])

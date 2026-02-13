@@ -57,6 +57,9 @@ interface DashboardStats {
     skills_nested_noncanonical_total: number;
     skills_repo_root_total: number;
     skills_other_total: number;
+    skills_trust_ok: number;
+    skills_trust_warning: number;
+    skills_trust_limited: number;
     raw_total: number;
     raw_pending: number;
     raw_processed: number;
@@ -380,10 +383,10 @@ export default function AdminDashboardPage() {
     return (
         <div className="space-y-8">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-900">대시보드 개요</h1>
+                <h1 className="text-2xl font-bold text-zinc-100">대시보드 개요</h1>
                 <div className="flex items-center gap-3">
                     {lastUpdatedAt && (
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-zinc-300">
                             업데이트: {lastUpdatedAt.toLocaleTimeString()}
                         </span>
                     )}
@@ -423,6 +426,13 @@ export default function AdminDashboardPage() {
                             <span className="font-mono text-gray-700 dark:text-gray-300">{dashboardStats.skills_repo_root_total}</span>, nested/non-canonical{" "}
                             <span className="font-mono text-gray-700 dark:text-gray-300">{dashboardStats.skills_nested_noncanonical_total}</span>, 기타{" "}
                             <span className="font-mono text-gray-700 dark:text-gray-300">{dashboardStats.skills_other_total}</span>
+                        </p>
+                    )}
+                    {dashboardStats && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            trust 상태: ok <span className="font-mono text-gray-700 dark:text-gray-300">{dashboardStats.skills_trust_ok}</span> / warning{" "}
+                            <span className="font-mono text-gray-700 dark:text-gray-300">{dashboardStats.skills_trust_warning}</span> / limited{" "}
+                            <span className="font-mono text-gray-700 dark:text-gray-300">{dashboardStats.skills_trust_limited}</span>
                         </p>
                     )}
                 </div>

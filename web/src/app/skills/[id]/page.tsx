@@ -1,9 +1,10 @@
 import { api } from "@/lib/api";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, Box, Tag, Layers, FileText, Code, Globe, User, Calendar, Shield } from "lucide-react";
+import { ArrowLeft, ExternalLink, Box, Tag, Layers, FileText, Code, Globe, User, Calendar, Shield, Star } from "lucide-react";
 import { SkillHeaderEngagement } from "@/components/SkillHeaderEngagement";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { SkillCopyCommand } from "@/components/SkillCopyCommand";
 
 interface SkillDetailProps {
     params: Promise<{ id: string }>;
@@ -23,6 +24,7 @@ interface SkillSourceLink {
 interface SkillDetail {
     id: string;
     name: string;
+    slug: string;
     description?: string | null;
     summary?: string | null;
     overview?: string | null;
@@ -39,6 +41,14 @@ interface SkillDetail {
     inputs?: Record<string, unknown> | null;
     outputs?: Record<string, unknown> | null;
     spec?: Record<string, unknown> | null;
+    use_cases?: string[] | null;
+    github_stars?: number | null;
+    github_updated_at?: string | null;
+    quality_score?: number | null;
+    trust_score?: number | null;
+    trust_level?: string | null;
+    trust_flags?: string[] | null;
+    trust_last_verified_at?: string | null;
 }
 
 // Ensure dynamic rendering
@@ -46,10 +56,44 @@ export const dynamic = 'force-dynamic';
 
 async function getSkill(id: string) {
     try {
-        return await api.get<SkillDetail>(`/skills/${id}`);
+        return await api.get<SkillDetail>(`/skills/${id}`, undefined, { revalidateSeconds: 60 });
     } catch {
         return null;
     }
+}
+
+// SEO Metadata
+export async function generateMetadata(props: SkillDetailProps) {
+    const params = await props.params;
+    const skill = await getSkill(params.id);
+
+    if (!skill) {
+        return {
+            title: "Skill Not Found",
+        };
+    }
+
+    return {
+        title: `${skill.name} - Agent Skill | Coreline Marketplace`,
+        description: skill.summary || skill.description?.slice(0, 160),
+        openGraph: {
+            title: `${skill.name} - Agent Skill`,
+            description: skill.summary || skill.description?.slice(0, 160),
+            type: "article",
+            images: [
+                {
+                    url: `/api/og?title=${encodeURIComponent(skill.name)}&category=${encodeURIComponent(skill.category?.name || "Uncategorized")}`,
+                    width: 1200,
+                    height: 630,
+                },
+            ],
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: skill.name,
+            description: skill.summary || skill.description?.slice(0, 160),
+        },
+    };
 }
 
 export default async function SkillDetailPage(props: SkillDetailProps) {
@@ -69,6 +113,10 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
     }
 
     const installUrl = skill.url || null;
+    const sourceUrlCandidates = (skill.source_links || [])
+        .map((link) => link.url || link.external_id || null)
+        .filter((value): value is string => Boolean(value));
+    const primarySourceUrl = installUrl || sourceUrlCandidates[0] || null;
     const skillInterface = {
         inputs: skill.inputs,
         outputs: skill.outputs,
@@ -140,73 +188,158 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
                             <FileText className="w-4 h-4 opacity-70" />
                             <h2 className="text-base font-bold tracking-tight">Overview</h2>
                         </div>
-                        <div className="prose prose-sm prose-gray dark:prose-invert max-w-none text-gray-600 dark:text-zinc-400 leading-relaxed prose-headings:font-bold prose-headings:text-gray-900 dark:prose-headings:text-white prose-a:text-blue-600 dark:prose-a:text-accent prose-a:font-bold hover:prose-a:text-blue-800 dark:hover:prose-a:text-accent/80 prose-code:text-pink-600 dark:prose-code:text-accent prose-code:bg-pink-50 dark:prose-code:bg-accent/10 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-pre:bg-gray-900 prose-pre:text-gray-50 dark:prose-pre:bg-black dark:prose-pre:border dark:prose-pre:border-white/10 prose-img:rounded-xl">
+                        <div className="prose prose-sm dark:prose-invert max-w-none text-gray-600 dark:text-zinc-300">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {skill.overview || skill.content || "No detailed overview available."}
+                                {skill.content || skill.overview || "_No overview provided._"}
                             </ReactMarkdown>
                         </div>
                     </section>
 
-                    {/* Interface */}
-                    {(skillInterface.inputs || skillInterface.outputs) && (
+                    {/* Use Cases - Benchmark Feature */}
+                    {skill.use_cases && skill.use_cases.length > 0 && (
                         <section className="bg-white dark:bg-card border border-gray-100 dark:border-white/10 rounded-2xl p-6 shadow-sm">
                             <div className="flex items-center gap-2 mb-4 text-gray-900 dark:text-white">
-                                <Code className="w-4 h-4 opacity-70" />
-                                <h2 className="text-base font-bold tracking-tight">Interface</h2>
+                                <Box className="w-4 h-4 opacity-70" />
+                                <h2 className="text-base font-bold tracking-tight">Best used for...</h2>
                             </div>
-
-                            <div className="grid gap-4">
-                                {skillInterface.inputs && (
-                                    <div className="space-y-2">
-                                        <h3 className="text-xs font-bold text-gray-500 dark:text-zinc-500 uppercase tracking-wider">Inputs</h3>
-                                        <div className="bg-[#1e1e1e] p-4 rounded-xl shadow-inner border border-gray-800 overflow-hidden">
-                                            <pre className="text-xs text-gray-300 overflow-x-auto font-mono custom-scrollbar">
-                                                {JSON.stringify(skillInterface.inputs, null, 2)}
-                                            </pre>
-                                        </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {skill.use_cases.map((useCase, i) => (
+                                    <div key={i} className="flex items-start gap-2 p-3 bg-gray-50 dark:bg-zinc-900/40 rounded-xl border border-gray-100 dark:border-white/5 text-sm text-gray-600 dark:text-zinc-400">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5 shrink-0" />
+                                        {useCase}
                                     </div>
-                                )}
-
-                                {skillInterface.outputs && (
-                                    <div className="space-y-2">
-                                        <h3 className="text-xs font-bold text-gray-500 dark:text-zinc-500 uppercase tracking-wider">Outputs</h3>
-                                        <div className="bg-[#1e1e1e] p-4 rounded-xl shadow-inner border border-gray-800 overflow-hidden">
-                                            <pre className="text-xs text-gray-300 overflow-x-auto font-mono custom-scrollbar">
-                                                {JSON.stringify(skillInterface.outputs, null, 2)}
-                                            </pre>
-                                        </div>
-                                    </div>
-                                )}
+                                ))}
                             </div>
                         </section>
                     )}
 
-                    {/* Installation / Usage */}
+                    {/* Technical Specifications - Benchmark Feature */}
+                    <section className="bg-white dark:bg-card border border-gray-100 dark:border-white/10 rounded-2xl p-6 shadow-sm">
+                        <div className="flex items-center gap-2 mb-4 text-gray-900 dark:text-white">
+                            <Code className="w-4 h-4 opacity-70" />
+                            <h2 className="text-base font-bold tracking-tight">Technical Specifications</h2>
+                        </div>
+
+                        <div className="space-y-6">
+                            {(allowedTools.length > 0 || userInvocable !== null || disableModelInvocation !== null) && (
+                                <div className="space-y-3">
+                                    <h3 className="text-xs font-bold text-gray-500 dark:text-zinc-500 uppercase tracking-wider">Dependencies & Permissions</h3>
+                                    <div className="bg-gray-50 dark:bg-zinc-900/40 rounded-xl p-4 border border-gray-100 dark:border-white/5 space-y-3">
+                                        {allowedTools.length > 0 && (
+                                            <div>
+                                                <span className="text-xs text-gray-500 dark:text-zinc-500 mb-1.5 block">Allowed Tools</span>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {allowedTools.map((tool) => (
+                                                        <span key={tool} className="px-2 py-1 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 rounded text-[11px] font-mono font-medium">
+                                                            {tool}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {userInvocable !== null && (
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs text-gray-500 dark:text-zinc-500">User Invocable</span>
+                                                    <span className={`text-xs font-bold ${userInvocable ? "text-emerald-600 dark:text-emerald-400" : "text-gray-900 dark:text-white"}`}>
+                                                        {userInvocable ? "Yes" : "No"}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {disableModelInvocation !== null && (
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs text-gray-500 dark:text-zinc-500">Model Auto-Invoke</span>
+                                                    <span className={`text-xs font-bold ${!disableModelInvocation ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
+                                                        {!disableModelInvocation ? "Enabled" : "Disabled"}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {(skillInterface.inputs || skillInterface.outputs) && (
+                                <div className="grid gap-4">
+                                    {skillInterface.inputs && (
+                                        <div className="space-y-2">
+                                            <h3 className="text-xs font-bold text-gray-500 dark:text-zinc-500 uppercase tracking-wider">Inputs</h3>
+                                            <div className="bg-[#1e1e1e] p-4 rounded-xl shadow-inner border border-gray-800 overflow-hidden">
+                                                <pre className="text-xs text-gray-300 overflow-x-auto font-mono custom-scrollbar">
+                                                    {JSON.stringify(skillInterface.inputs, null, 2)}
+                                                </pre>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {skillInterface.outputs && (
+                                        <div className="space-y-2">
+                                            <h3 className="text-xs font-bold text-gray-500 dark:text-zinc-500 uppercase tracking-wider">Outputs</h3>
+                                            <div className="bg-[#1e1e1e] p-4 rounded-xl shadow-inner border border-gray-800 overflow-hidden">
+                                                <pre className="text-xs text-gray-300 overflow-x-auto font-mono custom-scrollbar">
+                                                    {JSON.stringify(skillInterface.outputs, null, 2)}
+                                                </pre>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </section>
+
+                    {/* Quick Start */}
                     <section className="bg-white dark:bg-card border border-gray-100 dark:border-white/10 rounded-2xl p-6 shadow-sm">
                         <div className="flex items-center gap-2 mb-4 text-gray-900 dark:text-white">
                             <Layers className="w-4 h-4 opacity-70" />
-                            <h2 className="text-base font-bold tracking-tight">Integration</h2>
+                            <h2 className="text-base font-bold tracking-tight">Quick Start</h2>
                         </div>
 
                         <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-500/20 rounded-xl p-6">
-                            {installUrl ? (
-                                <div className="space-y-4">
-                                    <p className="text-gray-700 dark:text-zinc-300 font-medium">
-                                        To integrate this skill into your agent, refer to the official documentation or source repository.
+                            <div className="space-y-6">
+                                <div>
+                                    <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-2">Install Snippet</h3>
+                                    <p className="text-sm text-gray-600 dark:text-zinc-400 mb-4">
+                                        Pick your client, copy the command, and install this skill in one step.
                                     </p>
-                                    <a
-                                        href={installUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-2 px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-full font-bold shadow-md hover:bg-gray-800 dark:hover:bg-zinc-200 hover:shadow-lg transition-all"
-                                    >
-                                        <ExternalLink className="w-4 h-4" />
-                                        View Documentation
-                                    </a>
+                                    <SkillCopyCommand
+                                        skillId={skill.id}
+                                        slug={skill.slug}
+                                        installUrl={installUrl}
+                                        sourceLinks={skill.source_links}
+                                    />
                                 </div>
-                            ) : (
-                                <p className="text-gray-500 dark:text-zinc-500 italic">No direct integration link provided.</p>
-                            )}
+
+                                {primarySourceUrl && (
+                                    <div className="pt-6 border-t border-blue-100 dark:border-blue-500/20">
+                                        <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-2">Source / Docs</h3>
+                                        <a
+                                            href={primarySourceUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg text-xs font-bold shadow-sm hover:bg-gray-800 dark:hover:bg-zinc-200 transition-all"
+                                        >
+                                            <ExternalLink className="w-3 h-3" />
+                                            View Source / Deploy Docs
+                                        </a>
+                                        {sourceUrlCandidates.length > 1 && (
+                                            <div className="mt-3 flex flex-wrap gap-2">
+                                                {sourceUrlCandidates.slice(1, 4).map((url) => (
+                                                    <a
+                                                        key={url}
+                                                        href={url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-100/60 dark:bg-blue-900/20 rounded border border-blue-200/70 dark:border-blue-500/20"
+                                                    >
+                                                        <ExternalLink className="w-3 h-3" />
+                                                        Alternate Source
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </section>
                 </div>
@@ -229,6 +362,44 @@ export default async function SkillDetailPage(props: SkillDetailProps) {
                                     {skill.author || "Community"}
                                 </span>
                             </div>
+                            {skill.github_stars !== undefined && skill.github_stars !== null && (
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm font-medium text-gray-500 dark:text-zinc-500 flex items-center gap-2">
+                                        <Star className="w-4 h-4 text-orange-400" /> GitHub Stars
+                                    </span>
+                                    <span className="text-sm font-bold text-gray-900 dark:text-white">
+                                        {skill.github_stars}
+                                    </span>
+                                </div>
+                            )}
+                            {skill.trust_level && (
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm font-medium text-gray-500 dark:text-zinc-500 flex items-center gap-2">
+                                        <Shield className="w-4 h-4" /> Trust
+                                    </span>
+                                    <span
+                                        className={`text-xs font-bold px-2 py-1 rounded border ${skill.trust_level === "ok"
+                                                ? "text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-300 dark:bg-emerald-900/20 dark:border-emerald-500/20"
+                                                : skill.trust_level === "warning"
+                                                    ? "text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-300 dark:bg-amber-900/20 dark:border-amber-500/20"
+                                                    : "text-rose-700 bg-rose-50 border-rose-200 dark:text-rose-300 dark:bg-rose-900/20 dark:border-rose-500/20"
+                                            }`}
+                                        title={skill.trust_flags?.join(", ") || ""}
+                                    >
+                                        {skill.trust_level.toUpperCase()} {skill.trust_score !== undefined && skill.trust_score !== null ? Math.round(skill.trust_score) : ""}
+                                    </span>
+                                </div>
+                            )}
+                            {skill.trust_last_verified_at && (
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm font-medium text-gray-500 dark:text-zinc-500 flex items-center gap-2">
+                                        <Calendar className="w-4 h-4" /> Last Verified
+                                    </span>
+                                    <span className="text-sm font-bold text-gray-900 dark:text-white">
+                                        {new Date(skill.trust_last_verified_at).toISOString().split('T')[0]}
+                                    </span>
+                                </div>
+                            )}
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-medium text-gray-500 dark:text-zinc-500 flex items-center gap-2">
                                     <Shield className="w-4 h-4" /> License

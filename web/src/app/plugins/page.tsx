@@ -38,12 +38,12 @@ async function getPlugins(searchParams: { q?: string; category?: string; page?: 
     if (searchParams.q) params.set("q", searchParams.q);
     if (searchParams.category) params.set("category", searchParams.category);
     if (searchParams.page) params.set("page", searchParams.page.toString());
-    return await api.get<PluginListResponse>(`/plugins?${params.toString()}`);
+    return await api.get<PluginListResponse>(`/plugins?${params.toString()}`, undefined, { revalidateSeconds: 60 });
 }
 
 async function getCategories() {
     // Reuse global taxonomy categories for filtering.
-    return await api.get<CategoryItem[]>("/categories");
+    return await api.get<CategoryItem[]>("/categories", undefined, { revalidateSeconds: 600 });
 }
 
 function buildPluginsHref(params: { q?: string; category?: string; page?: number }) {

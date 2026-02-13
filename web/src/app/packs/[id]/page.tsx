@@ -38,11 +38,11 @@ interface SkillListResponse {
 export const dynamic = "force-dynamic";
 
 async function getPack(id: string) {
-    return await api.get<PackDetail>(`/packs/${id}`);
+    return await api.get<PackDetail>(`/packs/${id}`, undefined, { revalidateSeconds: 120 });
 }
 
 async function getPackSkills(id: string, page: number) {
-    return await api.get<SkillListResponse>(`/packs/${id}/skills?page=${page}&size=24`);
+    return await api.get<SkillListResponse>(`/packs/${id}/skills?page=${page}&size=24`, undefined, { revalidateSeconds: 60 });
 }
 
 export default async function PackDetailPage(props: {

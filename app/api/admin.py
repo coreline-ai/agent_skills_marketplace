@@ -147,6 +147,21 @@ async def get_dashboard_stats(
         int(skills_blob_any_depth_total or 0) - int(skills_public_total or 0),
         0,
     )
+    skills_trust_ok = (
+        await db.execute(
+            select(func.count()).select_from(Skill).where(Skill.trust_level == "ok")
+        )
+    ).scalar_one()
+    skills_trust_warning = (
+        await db.execute(
+            select(func.count()).select_from(Skill).where(Skill.trust_level == "warning")
+        )
+    ).scalar_one()
+    skills_trust_limited = (
+        await db.execute(
+            select(func.count()).select_from(Skill).where(Skill.trust_level == "limited")
+        )
+    ).scalar_one()
 
     # Raw skills
     raw_total = (await db.execute(select(func.count()).select_from(RawSkill))).scalar_one()
@@ -216,6 +231,9 @@ async def get_dashboard_stats(
         "skills_nested_noncanonical_total": int(skills_nested_noncanonical_total or 0),
         "skills_repo_root_total": int(skills_repo_root_total or 0),
         "skills_other_total": int(skills_other_total or 0),
+        "skills_trust_ok": int(skills_trust_ok or 0),
+        "skills_trust_warning": int(skills_trust_warning or 0),
+        "skills_trust_limited": int(skills_trust_limited or 0),
         "raw_total": int(raw_total or 0),
         "raw_pending": int(raw_pending or 0),
         "raw_processed": int(raw_processed or 0),

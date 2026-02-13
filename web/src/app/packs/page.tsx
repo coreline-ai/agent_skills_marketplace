@@ -29,7 +29,7 @@ async function getPacks(searchParams: { q?: string; page?: number }) {
     const params = new URLSearchParams();
     if (searchParams.q) params.set("q", searchParams.q);
     if (searchParams.page) params.set("page", String(searchParams.page));
-    return await api.get<PackListResponse>(`/packs?${params.toString()}`);
+    return await api.get<PackListResponse>(`/packs?${params.toString()}`, undefined, { revalidateSeconds: 60 });
 }
 
 function buildPacksHref(params: { q?: string; page?: number }) {
@@ -133,4 +133,3 @@ export default async function PacksPage(props: {
         </div>
     );
 }
-

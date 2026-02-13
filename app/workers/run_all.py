@@ -185,6 +185,14 @@ async def main():
                 except Exception as e:
                     await _patch_worker_status({"phase": "glm_backfill_error", "last_error": str(e)})
 
+                # Embeddings backfill even when ingest OFF
+                try:
+                    await _patch_worker_status({"phase": "embedding_backfill"})
+                    async with AsyncSessionLocal() as db:
+                        await ingest_and_parse.backfill_missing_embeddings(db, limit=20)
+                except Exception as e:
+                    await _patch_worker_status({"phase": "embedding_backfill_error", "last_error": str(e)})
+
             await _patch_worker_status({"phase": "compute_popularity"})
             await compute_popularity.run()
             await _patch_worker_status({"phase": "build_rank_snapshots"})

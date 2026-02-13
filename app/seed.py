@@ -95,6 +95,12 @@ gemini extensions install https://github.com/gemini-cli-extensions/stitch
         "is_official": True,
         "inputs": {},
         "outputs": {},
+        "github_stars": 1250,
+        "use_cases": [
+            "Quickly prototype mobile app UIs",
+            "Generate React components from text descriptions",
+            "Speed up design-to-code workflow"
+        ]
     }
 ]
 
@@ -181,7 +187,9 @@ async def seed_data():
                         is_verified=skill_data["is_verified"],
                         is_official=skill_data["is_official"],
                         inputs=skill_data.get("inputs"),
-                        outputs=skill_data.get("outputs")
+                        outputs=skill_data.get("outputs"),
+                        github_stars=skill_data.get("github_stars"),
+                        use_cases=skill_data.get("use_cases")
                     )
                     db.add(new_skill)
                     await db.flush() # to get ID

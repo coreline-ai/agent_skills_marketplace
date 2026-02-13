@@ -3,16 +3,18 @@
 
 from typing import Any, Optional, Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
+from app.api.cache_headers import PUBLIC_TAXONOMY_CACHE, REDIS_TTL_TAXONOMY, set_public_cache
 from app.models.category import Category
 from app.models.skill import Skill
 from app.models.tag import Tag
 from app.schemas.skill import CategoryWithCount, TagBase
 from app.repos.public_filters import public_skill_conditions
+from app.api.response_cache import set_cached_response, try_cached_response
 
 router = APIRouter()
 
@@ -48,7 +50,7 @@ async def _categories_payload(
 
     return [
         {
-            "id": category.id,
+            "id": str(category.id),
             "name": category.name,
             "slug": category.slug,
             "description": category.description,
@@ -60,44 +62,87 @@ async def _categories_payload(
 
 @router.get("/categories", response_model=list[CategoryWithCount])
 async def search_categories(
+    request: Request,
+    response: Response,
     q: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
     skip: int = 0,
     limit: int = 100,
 ) -> Any:
     """List all categories."""
-    return await _categories_payload(q=q, db=db, skip=skip, limit=limit)
+    set_public_cache(response, PUBLIC_TAXONOMY_CACHE)
+    cached = await try_cached_response(
+        request=request,
+        namespace="taxonomy:categories",
+        cache_control=PUBLIC_TAXONOMY_CACHE,
+    )
+    if cached is not None:
+        return cached
+    payload = await _categories_payload(q=q, db=db, skip=skip, limit=limit)
+    await set_cached_response(
+        request=request,
+        namespace="taxonomy:categories",
+        payload=payload,
+        ttl_seconds=REDIS_TTL_TAXONOMY,
+    )
+    response.headers["X-Cache"] = "MISS"
+    return payload
 
 
 @router.get("/taxonomy/categories", response_model=list[CategoryWithCount])
 async def search_categories_legacy(
+    request: Request,
+    response: Response,
     q: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
     skip: int = 0,
     limit: int = 100,
 ) -> Any:
     """Backward-compatible alias for older clients."""
-    return await _categories_payload(q=q, db=db, skip=skip, limit=limit)
+    set_public_cache(response, PUBLIC_TAXONOMY_CACHE)
+    return await search_categories(request=request, response=response, q=q, db=db, skip=skip, limit=limit)
 
 
 @router.get("/tags", response_model=list[TagBase])
 async def list_tags(
+    request: Request,
+    response: Response,
     db: Annotated[AsyncSession, Depends(get_db)],
     q: Optional[str] = None,
 ):
     """List tags (optional search)."""
+    set_public_cache(response, PUBLIC_TAXONOMY_CACHE)
+    cached = await try_cached_response(
+        request=request,
+        namespace="taxonomy:tags",
+        cache_control=PUBLIC_TAXONOMY_CACHE,
+    )
+    if cached is not None:
+        return cached
     stmt = select(Tag).order_by(Tag.name).limit(100)
     if q:
         stmt = stmt.where(Tag.name.ilike(f"%{q}%"))
-    
+
     result = await db.execute(stmt)
-    return result.scalars().all()
+    tags = result.scalars().all()
+    payload = [TagBase.model_validate(tag).model_dump(mode="json") for tag in tags]
+    await set_cached_response(
+        request=request,
+        namespace="taxonomy:tags",
+        payload=payload,
+        ttl_seconds=REDIS_TTL_TAXONOMY,
+    )
+    response.headers["X-Cache"] = "MISS"
+    return payload
 
 
 @router.get("/taxonomy/tags", response_model=list[TagBase])
 async def list_tags_legacy(
+    request: Request,
+    response: Response,
     db: Annotated[AsyncSession, Depends(get_db)],
     q: Optional[str] = None,
 ):
     """Backward-compatible alias for older clients."""
-    return await list_tags(db=db, q=q)
+    set_public_cache(response, PUBLIC_TAXONOMY_CACHE)
+    return await list_tags(request=request, response=response, db=db, q=q)

@@ -36,9 +36,12 @@ RUN chmod +x scripts/start.sh
 # Environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
+ENV HF_HOME=/app/data/cache/huggingface
 
 # Create a non-privileged user and group
+# Also create the cache directory with correct permissions
 RUN adduser --system --group --no-create-home appuser && \
+    mkdir -p /app/data/cache/huggingface && \
     chown -R appuser:appuser /app
 
 # Switch to the non-privileged user

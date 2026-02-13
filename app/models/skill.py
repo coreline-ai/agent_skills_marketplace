@@ -2,9 +2,11 @@
 """Skill model."""
 
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Any
-from sqlalchemy import String, ForeignKey, Text, Boolean
+from sqlalchemy import String, ForeignKey, Text, Boolean, Integer, DateTime, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from pgvector.sqlalchemy import Vector
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 from app.db.base import Base
@@ -55,6 +57,22 @@ class Skill(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     # Status
     is_official: Mapped[bool] = mapped_column(Boolean, default=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    # Benchmark Features (GitHub & Metadata)
+    github_stars: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    github_updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    use_cases: Mapped[Optional[list[str]]] = mapped_column(JSONB, nullable=True)
+
+    # Trust layer
+    quality_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    trust_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True, index=True)
+    trust_level: Mapped[Optional[str]] = mapped_column(String, nullable=True, index=True)  # ok|warning|limited
+    trust_flags: Mapped[Optional[list[str]]] = mapped_column(JSONB, nullable=True)
+    trust_last_verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    trust_override: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+
+    # Vector Search
+    embedding: Mapped[Optional[list[float]]] = mapped_column(Vector(384), nullable=True)  # 384 for all-MiniLM-L6-v2
     
     # Relationships
     category: Mapped["Category"] = relationship("Category", back_populates="skills")

@@ -35,6 +35,18 @@ def parse_skill_md(content: str) -> dict[str, Any]:
             frontmatter_error = "invalid_frontmatter"
             print("YAML Error parsing frontmatter")
 
+    # Extract Use Cases from markdown body
+    use_cases = []
+    # Look for "Best used for", "Use Cases", "Examples" sections
+    use_case_pattern = re.compile(
+        r"(?:Best used for|Use Cases|Examples|사용 사례|주요 용도)\s*[:\n]\s*((?:[-*]\s+.+(?:\n|$))+)",
+        re.IGNORECASE
+    )
+    uc_match = use_case_pattern.search(markdown_content)
+    if uc_match:
+        items = re.findall(r"[-*]\s+(.+)", uc_match.group(1))
+        use_cases = [i.strip() for i in items if i.strip()]
+
     # Normalize some common fields if needed
     if "tags" in metadata and isinstance(metadata["tags"], str):
         metadata["tags"] = [t.strip() for t in metadata["tags"].split(",")]
@@ -44,6 +56,7 @@ def parse_skill_md(content: str) -> dict[str, Any]:
         "content": markdown_content,
         "frontmatter_raw": frontmatter_raw,
         "frontmatter_error": frontmatter_error,
+        "use_cases": use_cases,
     }
 
 def normalize_category(category_name: str, aliases: list[CategoryAlias]) -> str:

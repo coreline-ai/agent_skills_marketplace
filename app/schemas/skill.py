@@ -1,10 +1,11 @@
 """Skill schemas."""
 
 import uuid
+from datetime import datetime
 from typing import Any, Optional
 from uuid import UUID
-from datetime import datetime
-from pydantic import BaseModel, HttpUrl, Field, ConfigDict
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class TagBase(BaseModel):
@@ -37,12 +38,12 @@ class SkillBase(BaseModel):
     # Basic Info
     name: str = Field(..., min_length=1, max_length=100)
     slug: str = Field(..., min_length=1, max_length=120)
-    
+
     # Popularity snapshot
     views: int = Field(default=0, ge=0)
     stars: int = Field(default=0, ge=0)
     score: float = Field(default=0.0, ge=0.0)
-    
+
     is_official: bool = False
     description: Optional[str] = Field(None, max_length=1000)
     category_slug: Optional[str] = Field(None, max_length=50)
@@ -62,6 +63,16 @@ class SkillBase(BaseModel):
     constraints: Optional[list[str]] = None
     triggers: Optional[list[str]] = None
 
+    # New Fields
+    github_stars: Optional[int] = None
+    github_updated_at: Optional[datetime] = None
+    use_cases: Optional[list[str]] = None
+    quality_score: Optional[float] = None
+    trust_score: Optional[float] = None
+    trust_level: Optional[str] = None
+    trust_flags: Optional[list[str]] = None
+    trust_last_verified_at: Optional[datetime] = None
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -73,7 +84,7 @@ class Skill(SkillBase):
     score: float = 0.0
     created_at: datetime
     updated_at: datetime
-    
+
     category: Optional[CategoryBase] = None
     tags: list[TagBase] = []
     source_links: list[SkillSourceLinkBase] = []
@@ -93,6 +104,14 @@ class SkillListItem(BaseModel):
     category_slug: Optional[str] = None
     category: Optional[CategoryBase] = None
     updated_at: datetime
+    github_stars: Optional[int] = None
+    github_updated_at: Optional[datetime] = None
+    match_reason: Optional[str] = None
+    quality_score: Optional[float] = None
+    trust_score: Optional[float] = None
+    trust_level: Optional[str] = None
+    trust_flags: Optional[list[str]] = None
+    trust_last_verified_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -101,7 +120,7 @@ class SkillFilter(BaseModel):
     q: Optional[str] = None
     category: Optional[str] = None # category slug
     tags: Optional[list[str]] = None # list of tag slugs
-    
+
 class SkillQuery(BaseModel):
     q: Optional[str] = None
     category_slug: Optional[str] = None
@@ -109,5 +128,5 @@ class SkillQuery(BaseModel):
     sort: str = "popularity"
     page: int = 1
     size: int = 20
-    
+
 SkillDetail = Skill

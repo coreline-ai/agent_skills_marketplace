@@ -16,7 +16,6 @@ export default function AdminLayout({
     const router = useRouter();
     const isLoginPage = pathname === "/admin/login";
     const [authReady, setAuthReady] = useState(false);
-
     useEffect(() => {
         let mounted = true;
 
@@ -165,5 +164,4 @@ export default function AdminLayout({
         </div>
     );
 }
-
 
